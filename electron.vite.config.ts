@@ -5,7 +5,18 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [
+      externalizeDepsPlugin({
+        exclude: ['electron-store', 'conf', 'atomically', 'env-paths']
+      })
+    ],
+    build: {
+      rollupOptions: {
+        output: {
+          format: 'cjs'
+        }
+      }
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]

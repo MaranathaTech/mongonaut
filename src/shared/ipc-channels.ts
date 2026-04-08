@@ -28,5 +28,6 @@ export const IPC_CHANNELS = {
   // History
   HISTORY_LIST: 'history:list',
   HISTORY_CLEAR: 'history:clear',
-  HISTORY_SEARCH: 'history:search'
+  HISTORY_SEARCH: 'history:search',
+  HISTORY_DELETE: 'history:delete'
 } as const

@@ -42,7 +42,8 @@ const api = {
   // History
   listHistory: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_LIST),
   clearHistory: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR),
-  searchHistory: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query)
+  searchHistory: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query),
+  deleteHistoryEntry: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id)
 }
 
 export type MongoViewerAPI = typeof api

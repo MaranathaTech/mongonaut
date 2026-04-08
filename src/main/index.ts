@@ -1,11 +1,37 @@
 import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import Store from 'electron-store'
+import { registerConnectionHandlers } from './ipc/connection.ipc'
+import { registerDatabaseHandlers } from './ipc/database.ipc'
+import { registerSchemaHandlers } from './ipc/schema.ipc'
+import { registerQueryHandlers } from './ipc/query.ipc'
+import { registerDocumentHandlers } from './ipc/document.ipc'
+import { registerHistoryHandlers } from './ipc/history.ipc'
+
+interface WindowBounds {
+  x?: number
+  y?: number
+  width: number
+  height: number
+}
+
+const windowStore = new Store({ name: 'window-state' }) as unknown as {
+  get(key: 'bounds'): WindowBounds | undefined
+  get(key: 'bounds', defaultValue: WindowBounds): WindowBounds
+  get(key: 'isMaximized'): boolean | undefined
+  get(key: 'isMaximized', defaultValue: boolean): boolean
+  set(key: 'bounds', value: WindowBounds): void
+  set(key: 'isMaximized', value: boolean): void
+}
 
 function createWindow(): void {
+  const defaults: WindowBounds = { width: 1400, height: 900 }
+  const bounds = windowStore.get('bounds', defaults)
+  const isMaximized = windowStore.get('isMaximized', false)
+
   const mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
+    ...bounds,
     minWidth: 800,
     minHeight: 600,
     show: false,
@@ -17,8 +43,20 @@ function createWindow(): void {
     }
   })
 
+  if (isMaximized) {
+    mainWindow.maximize()
+  }
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+  })
+
+  // Save window state on close
+  mainWindow.on('close', () => {
+    windowStore.set('isMaximized', mainWindow.isMaximized())
+    if (!mainWindow.isMaximized()) {
+      windowStore.set('bounds', mainWindow.getBounds())
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -39,6 +77,13 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
+
+  registerConnectionHandlers()
+  registerDatabaseHandlers()
+  registerSchemaHandlers()
+  registerQueryHandlers()
+  registerDocumentHandlers()
+  registerHistoryHandlers()
 
   createWindow()
 

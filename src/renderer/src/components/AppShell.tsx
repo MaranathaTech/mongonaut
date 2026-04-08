@@ -1,15 +1,34 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Sidebar from './Sidebar'
-import TabBar from './TabBar'
 import StatusBar from './StatusBar'
+import ErrorBoundary from './ErrorBoundary'
+import EditorPanel from '../features/editor/EditorPanel'
+import ResultsPanel from '../features/results/ResultsPanel'
 
 const MIN_SIDEBAR_WIDTH = 200
 const MAX_SIDEBAR_WIDTH = 600
 const MIN_EDITOR_HEIGHT = 100
 
-export default function AppShell(): React.JSX.Element {
-  const [sidebarWidth, setSidebarWidth] = useState(280)
-  const [editorHeightPercent, setEditorHeightPercent] = useState(40)
+const STORAGE_KEY_SIDEBAR = 'mongo-viewer-sidebar-width'
+const STORAGE_KEY_EDITOR = 'mongo-viewer-editor-height'
+
+function loadNumber(key: string, fallback: number): number {
+  try {
+    const v = localStorage.getItem(key)
+    if (v !== null) return Number(v)
+  } catch {
+    // ignore
+  }
+  return fallback
+}
+
+interface AppShellProps {
+  connectionDialogTrigger?: number
+}
+
+export default function AppShell({ connectionDialogTrigger }: AppShellProps): React.JSX.Element {
+  const [sidebarWidth, setSidebarWidth] = useState(() => loadNumber(STORAGE_KEY_SIDEBAR, 280))
+  const [editorHeightPercent, setEditorHeightPercent] = useState(() => loadNumber(STORAGE_KEY_EDITOR, 40))
   const [isResizingSidebar, setIsResizingSidebar] = useState(false)
   const [isResizingEditor, setIsResizingEditor] = useState(false)
   const mainContentRef = useRef<HTMLDivElement>(null)
@@ -32,9 +51,8 @@ export default function AppShell(): React.JSX.Element {
       }
       if (isResizingEditor && mainContentRef.current) {
         const rect = mainContentRef.current.getBoundingClientRect()
-        // Subtract TabBar height (~36px)
-        const availableHeight = rect.height - 36
-        const relativeY = e.clientY - rect.top - 36
+        const availableHeight = rect.height
+        const relativeY = e.clientY - rect.top
         const percent = Math.min(
           80,
           Math.max(
@@ -47,6 +65,12 @@ export default function AppShell(): React.JSX.Element {
     }
 
     const handleMouseUp = (): void => {
+      if (isResizingSidebar) {
+        localStorage.setItem(STORAGE_KEY_SIDEBAR, String(sidebarWidth))
+      }
+      if (isResizingEditor) {
+        localStorage.setItem(STORAGE_KEY_EDITOR, String(editorHeightPercent))
+      }
       setIsResizingSidebar(false)
       setIsResizingEditor(false)
     }
@@ -64,17 +88,19 @@ export default function AppShell(): React.JSX.Element {
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
-  }, [isResizingSidebar, isResizingEditor])
+  }, [isResizingSidebar, isResizingEditor, sidebarWidth, editorHeightPercent])
 
   return (
-    <div className="flex h-full flex-col bg-zinc-900 text-zinc-100">
+    <div className="flex h-full flex-col bg-white text-gray-900 dark:bg-zinc-900 dark:text-zinc-100">
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div
-          className="flex-shrink-0 overflow-hidden border-r border-zinc-700 bg-zinc-800/50"
+          className="flex-shrink-0 overflow-hidden border-r border-gray-200 bg-gray-50 dark:border-zinc-700 dark:bg-zinc-800/50"
           style={{ width: sidebarWidth }}
         >
-          <Sidebar />
+          <ErrorBoundary fallbackLabel="Sidebar">
+            <Sidebar connectionDialogTrigger={connectionDialogTrigger} />
+          </ErrorBoundary>
         </div>
 
         {/* Sidebar resize handle */}
@@ -85,16 +111,14 @@ export default function AppShell(): React.JSX.Element {
 
         {/* Main content area */}
         <div ref={mainContentRef} className="flex flex-1 flex-col overflow-hidden">
-          <TabBar />
-
-          {/* Editor area */}
+          {/* Editor area (tabs + toolbar + Monaco editor) */}
           <div
-            className="overflow-auto border-b border-zinc-700 bg-zinc-900"
+            className="overflow-hidden border-b border-gray-200 bg-white dark:border-zinc-700 dark:bg-zinc-900"
             style={{ height: `${editorHeightPercent}%` }}
           >
-            <div className="flex h-full items-center justify-center text-zinc-500">
-              <p className="text-sm">Select a collection to start querying</p>
-            </div>
+            <ErrorBoundary fallbackLabel="Editor">
+              <EditorPanel />
+            </ErrorBoundary>
           </div>
 
           {/* Editor/Results resize handle */}
@@ -104,10 +128,10 @@ export default function AppShell(): React.JSX.Element {
           />
 
           {/* Results area */}
-          <div className="flex-1 overflow-auto bg-zinc-900">
-            <div className="flex h-full items-center justify-center text-zinc-500">
-              <p className="text-sm">Run a query to see results</p>
-            </div>
+          <div className="flex-1 overflow-hidden bg-white dark:bg-zinc-900">
+            <ErrorBoundary fallbackLabel="Results">
+              <ResultsPanel />
+            </ErrorBoundary>
           </div>
         </div>
       </div>
