@@ -1,0 +1,51 @@
+{
+  "name": "mongo-viewer",
+  "version": "1.0.0",
+  "description": "A lightweight MongoDB viewer application",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web"
+  },
+  "dependencies": {
+    "@radix-ui/react-alert-dialog": "^1.1.0",
+    "@radix-ui/react-context-menu": "^2.2.0",
+    "@radix-ui/react-dialog": "^1.1.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.0",
+    "@radix-ui/react-popover": "^1.1.0",
+    "@radix-ui/react-scroll-area": "^1.2.0",
+    "@radix-ui/react-select": "^2.1.0",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.1.0",
+    "@monaco-editor/react": "^4.6.0",
+    "ag-grid-community": "^33.0.0",
+    "ag-grid-react": "^33.0.0",
+    "clsx": "^2.1.0",
+    "electron-store": "^10.0.0",
+    "lucide-react": "^0.400.0",
+    "mongodb": "^6.8.0",
+    "react-arborist": "^3.4.0",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.0",
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "electron": "^33.0.0",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.5.0"
+  }
+}
