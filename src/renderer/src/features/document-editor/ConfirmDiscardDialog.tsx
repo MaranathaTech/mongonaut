@@ -1,9 +1,9 @@
-import * as AlertDialog from '@radix-ui/react-alert-dialog'
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 interface ConfirmDiscardDialogProps {
-  open: boolean
-  onConfirm: () => void
-  onCancel: () => void
+  open: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export default function ConfirmDiscardDialog({
@@ -41,5 +41,5 @@ export default function ConfirmDiscardDialog({
         </AlertDialog.Content>
       </AlertDialog.Portal>
     </AlertDialog.Root>
-  )
+  );
 }

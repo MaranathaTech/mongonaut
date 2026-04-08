@@ -1,21 +1,21 @@
-import { useEffect, useState } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
-import type { CollectionStats } from '../../../../shared/types'
+import { useEffect, useState } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import { X } from 'lucide-react';
+import type { CollectionStats } from '../../../../shared/types';
 
 interface CollectionStatsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  database: string
-  collection: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  database: string;
+  collection: string;
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
 export default function CollectionStatsDialog({
@@ -24,25 +24,25 @@ export default function CollectionStatsDialog({
   database,
   collection
 }: CollectionStatsDialogProps): React.JSX.Element {
-  const [stats, setStats] = useState<CollectionStats | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<CollectionStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) return
-    setLoading(true)
-    setError(null)
+    if (!open) return;
+    setLoading(true);
+    setError(null);
     window.api
       .collectionStats(database, collection)
       .then((result) => {
-        setStats(result)
-        setLoading(false)
+        setStats(result);
+        setLoading(false);
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : String(err))
-        setLoading(false)
-      })
-  }, [open, database, collection])
+        setError(err instanceof Error ? err.message : String(err));
+        setLoading(false);
+      });
+  }, [open, database, collection]);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -79,7 +79,7 @@ export default function CollectionStatsDialog({
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 }
 
 function StatRow({ label, value }: { label: string; value: string }): React.JSX.Element {
@@ -88,5 +88,5 @@ function StatRow({ label, value }: { label: string; value: string }): React.JSX.
       <span className="text-xs text-gray-500 dark:text-zinc-400">{label}</span>
       <span className="text-xs font-medium text-gray-800 dark:text-zinc-200">{value}</span>
     </div>
-  )
+  );
 }

@@ -1,18 +1,18 @@
-import * as AlertDialog from '@radix-ui/react-alert-dialog'
-import type { SerializedDocument } from '../../../../shared/types'
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import type { SerializedDocument } from '../../../../shared/types';
 
 interface ConfirmDeleteDialogProps {
-  open: boolean
-  document: SerializedDocument
-  onConfirm: () => void
-  onCancel: () => void
+  open: boolean;
+  document: SerializedDocument;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 function formatIdValue(id: unknown): string {
   if (id && typeof id === 'object' && '$oid' in (id as Record<string, unknown>)) {
-    return String((id as Record<string, unknown>).$oid)
+    return String((id as Record<string, unknown>).$oid);
   }
-  return JSON.stringify(id)
+  return JSON.stringify(id);
 }
 
 export default function ConfirmDeleteDialog({
@@ -21,12 +21,12 @@ export default function ConfirmDeleteDialog({
   onConfirm,
   onCancel
 }: ConfirmDeleteDialogProps): React.JSX.Element {
-  const idDisplay = formatIdValue(document._id)
+  const idDisplay = formatIdValue(document._id);
 
   // Show a preview of the first few fields
   const previewEntries = Object.entries(document)
     .filter(([key]) => key !== '_id')
-    .slice(0, 5)
+    .slice(0, 5);
 
   return (
     <AlertDialog.Root open={open} onOpenChange={(o) => !o && onCancel()}>
@@ -53,9 +53,7 @@ export default function ConfirmDeleteDialog({
                       <span className="text-sky-300">{key}</span>
                       <span className="text-gray-400 dark:text-zinc-500">: </span>
                       <span className="text-gray-700 dark:text-zinc-300">
-                        {typeof value === 'string'
-                          ? `"${value}"`
-                          : JSON.stringify(value)}
+                        {typeof value === 'string' ? `"${value}"` : JSON.stringify(value)}
                       </span>
                     </div>
                   ))}
@@ -87,5 +85,5 @@ export default function ConfirmDeleteDialog({
         </AlertDialog.Content>
       </AlertDialog.Portal>
     </AlertDialog.Root>
-  )
+  );
 }

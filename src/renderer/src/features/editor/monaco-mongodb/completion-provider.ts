@@ -1,12 +1,12 @@
-import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
+import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import {
   queryOperators,
   aggregationStages,
   updateOperators,
   collectionMethods,
   type OperatorInfo
-} from './mongodb-operators'
-import type { SchemaField } from '../../../../../shared/types'
+} from './mongodb-operators';
+import type { SchemaField } from '../../../../../shared/types';
 
 function operatorToCompletionItem(
   op: OperatorInfo,
@@ -22,7 +22,7 @@ function operatorToCompletionItem(
     insertText: op.insertText,
     insertTextRules: monacoInstance.languages.CompletionItemInsertTextRule.InsertAsSnippet,
     range
-  }
+  };
 }
 
 /** Context analysis to determine what kind of completions to show */
@@ -30,42 +30,42 @@ function getContext(
   model: monaco.editor.ITextModel,
   position: monaco.Position
 ): 'dollar' | 'db-dot' | 'collection-method' | 'aggregation-stage' | 'general' {
-  const lineContent = model.getLineContent(position.lineNumber)
-  const textBeforeCursor = lineContent.substring(0, position.column - 1)
+  const lineContent = model.getLineContent(position.lineNumber);
+  const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
   // After db.collectionName. → suggest methods
   if (/db\.\w+\.\s*$/.test(textBeforeCursor)) {
-    return 'collection-method'
+    return 'collection-method';
   }
 
   // After db. → suggest collection names
   if (/db\.\s*$/.test(textBeforeCursor)) {
-    return 'db-dot'
+    return 'db-dot';
   }
 
   // After $ → suggest operators
   if (/\$\w*$/.test(textBeforeCursor)) {
-    return 'dollar'
+    return 'dollar';
   }
 
   // Inside aggregate array → suggest stages
-  const fullText = model.getValue()
-  const offset = model.getOffsetAt(position)
-  const textBefore = fullText.substring(0, offset)
+  const fullText = model.getValue();
+  const offset = model.getOffsetAt(position);
+  const textBefore = fullText.substring(0, offset);
   if (/\.aggregate\s*\(\s*\[/.test(textBefore)) {
     // Check we haven't closed the aggregate yet
-    const afterAggregate = textBefore.substring(textBefore.lastIndexOf('.aggregate'))
-    let bracketDepth = 0
+    const afterAggregate = textBefore.substring(textBefore.lastIndexOf('.aggregate'));
+    let bracketDepth = 0;
     for (const ch of afterAggregate) {
-      if (ch === '[') bracketDepth++
-      if (ch === ']') bracketDepth--
+      if (ch === '[') bracketDepth++;
+      if (ch === ']') bracketDepth--;
     }
     if (bracketDepth > 0) {
-      return 'aggregation-stage'
+      return 'aggregation-stage';
     }
   }
 
-  return 'general'
+  return 'general';
 }
 
 export function createCompletionProvider(
@@ -80,16 +80,16 @@ export function createCompletionProvider(
       model: monaco.editor.ITextModel,
       position: monaco.Position
     ): monaco.languages.ProviderResult<monaco.languages.CompletionList> {
-      const word = model.getWordUntilPosition(position)
+      const word = model.getWordUntilPosition(position);
       const range: monaco.IRange = {
         startLineNumber: position.lineNumber,
         endLineNumber: position.lineNumber,
         startColumn: word.startColumn,
         endColumn: word.endColumn
-      }
+      };
 
-      const context = getContext(model, position)
-      const suggestions: monaco.languages.CompletionItem[] = []
+      const context = getContext(model, position);
+      const suggestions: monaco.languages.CompletionItem[] = [];
 
       switch (context) {
         case 'dollar': {
@@ -97,13 +97,13 @@ export function createCompletionProvider(
           const dollarRange: monaco.IRange = {
             ...range,
             startColumn: Math.max(1, range.startColumn - 1)
-          }
-          const allOperators = [...queryOperators, ...aggregationStages, ...updateOperators]
+          };
+          const allOperators = [...queryOperators, ...aggregationStages, ...updateOperators];
           // Deduplicate by label (some operators like $set appear in multiple categories)
-          const seen = new Set<string>()
+          const seen = new Set<string>();
           for (const op of allOperators) {
             if (!seen.has(op.label)) {
-              seen.add(op.label)
+              seen.add(op.label);
               suggestions.push(
                 operatorToCompletionItem(
                   op,
@@ -111,10 +111,10 @@ export function createCompletionProvider(
                   monacoInstance,
                   monacoInstance.languages.CompletionItemKind.Keyword
                 )
-              )
+              );
             }
           }
-          break
+          break;
         }
 
         case 'db-dot': {
@@ -126,9 +126,9 @@ export function createCompletionProvider(
               documentation: `Collection: ${col}`,
               insertText: col,
               range
-            })
+            });
           }
-          break
+          break;
         }
 
         case 'collection-method': {
@@ -140,9 +140,9 @@ export function createCompletionProvider(
                 monacoInstance,
                 monacoInstance.languages.CompletionItemKind.Method
               )
-            )
+            );
           }
-          break
+          break;
         }
 
         case 'aggregation-stage': {
@@ -154,16 +154,16 @@ export function createCompletionProvider(
                 monacoInstance,
                 monacoInstance.languages.CompletionItemKind.Snippet
               )
-            )
+            );
           }
-          break
+          break;
         }
 
         case 'general': {
           // Suggest field names if available (with type info)
           for (const field of fields) {
-            const typeStr = field.types.join(' | ')
-            const pct = Math.round(field.frequency * 100)
+            const typeStr = field.types.join(' | ');
+            const pct = Math.round(field.frequency * 100);
             suggestions.push({
               label: field.path,
               kind: monacoInstance.languages.CompletionItemKind.Property,
@@ -172,7 +172,7 @@ export function createCompletionProvider(
               insertText: field.path,
               sortText: String(1000 - pct).padStart(4, '0'),
               range
-            })
+            });
           }
           // Suggest db keyword
           suggestions.push({
@@ -182,12 +182,12 @@ export function createCompletionProvider(
             documentation: 'Reference to the current database.',
             insertText: 'db',
             range
-          })
-          break
+          });
+          break;
         }
       }
 
-      return { suggestions }
+      return { suggestions };
     }
-  }
+  };
 }

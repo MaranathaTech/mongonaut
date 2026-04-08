@@ -1,5 +1,5 @@
-import * as Dialog from '@radix-ui/react-dialog'
-import { X, Keyboard } from 'lucide-react'
+import * as Dialog from '@radix-ui/react-dialog';
+import { X, Keyboard } from 'lucide-react';
 
 const shortcuts = [
   { keys: 'Ctrl+Enter', action: 'Execute query' },
@@ -13,11 +13,11 @@ const shortcuts = [
   { keys: 'F5', action: 'Refresh results' },
   { keys: 'Escape', action: 'Close dialog/panel' },
   { keys: '?', action: 'Show keyboard shortcuts' }
-]
+];
 
 interface KeyboardShortcutsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export default function KeyboardShortcutsDialog({
@@ -42,7 +42,10 @@ export default function KeyboardShortcutsDialog({
             <table className="w-full">
               <tbody>
                 {shortcuts.map((s) => (
-                  <tr key={s.keys} className="border-b border-gray-100 last:border-0 dark:border-zinc-800">
+                  <tr
+                    key={s.keys}
+                    className="border-b border-gray-100 last:border-0 dark:border-zinc-800"
+                  >
                     <td className="py-2 pr-4">
                       <span className="text-xs text-gray-600 dark:text-zinc-300">{s.action}</span>
                     </td>
@@ -59,5 +62,5 @@ export default function KeyboardShortcutsDialog({
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 }

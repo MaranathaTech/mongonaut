@@ -1,11 +1,11 @@
-import * as AlertDialog from '@radix-ui/react-alert-dialog'
-import type { SerializedDocument } from '../../../../shared/types'
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import type { SerializedDocument } from '../../../../shared/types';
 
 interface ConfirmInsertDialogProps {
-  open: boolean
-  document: SerializedDocument
-  onConfirm: () => void
-  onCancel: () => void
+  open: boolean;
+  document: SerializedDocument;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export default function ConfirmInsertDialog({
@@ -50,5 +50,5 @@ export default function ConfirmInsertDialog({
         </AlertDialog.Content>
       </AlertDialog.Portal>
     </AlertDialog.Root>
-  )
+  );
 }

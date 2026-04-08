@@ -1,13 +1,13 @@
-import * as AlertDialog from '@radix-ui/react-alert-dialog'
-import { diffDocuments, formatValue } from '../../lib/json-diff'
-import type { SerializedDocument } from '../../../../shared/types'
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import { diffDocuments, formatValue } from '../../lib/json-diff';
+import type { SerializedDocument } from '../../../../shared/types';
 
 interface ConfirmUpdateDialogProps {
-  open: boolean
-  originalDocument: SerializedDocument
-  editedDocument: SerializedDocument
-  onConfirm: () => void
-  onCancel: () => void
+  open: boolean;
+  originalDocument: SerializedDocument;
+  editedDocument: SerializedDocument;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 export default function ConfirmUpdateDialog({
@@ -17,7 +17,7 @@ export default function ConfirmUpdateDialog({
   onConfirm,
   onCancel
 }: ConfirmUpdateDialogProps): React.JSX.Element {
-  const diffs = diffDocuments(originalDocument, editedDocument)
+  const diffs = diffDocuments(originalDocument, editedDocument);
 
   return (
     <AlertDialog.Root open={open} onOpenChange={(o) => !o && onCancel()}>
@@ -37,26 +37,21 @@ export default function ConfirmUpdateDialog({
             ) : (
               <div className="space-y-2 font-mono text-xs">
                 {diffs.map((diff, i) => (
-                  <div key={i} className="rounded border border-gray-200/50 dark:border-zinc-700/50 p-2">
+                  <div
+                    key={i}
+                    className="rounded border border-gray-200/50 dark:border-zinc-700/50 p-2"
+                  >
                     <div className="mb-1 text-gray-500 dark:text-zinc-400">{diff.path}</div>
                     {diff.type === 'added' && (
-                      <div className="text-green-400">
-                        + {formatValue(diff.newValue)}
-                      </div>
+                      <div className="text-green-400">+ {formatValue(diff.newValue)}</div>
                     )}
                     {diff.type === 'removed' && (
-                      <div className="text-red-400">
-                        - {formatValue(diff.oldValue)}
-                      </div>
+                      <div className="text-red-400">- {formatValue(diff.oldValue)}</div>
                     )}
                     {diff.type === 'changed' && (
                       <>
-                        <div className="text-red-400">
-                          - {formatValue(diff.oldValue)}
-                        </div>
-                        <div className="text-green-400">
-                          + {formatValue(diff.newValue)}
-                        </div>
+                        <div className="text-red-400">- {formatValue(diff.oldValue)}</div>
+                        <div className="text-green-400">+ {formatValue(diff.newValue)}</div>
                       </>
                     )}
                   </div>
@@ -83,5 +78,5 @@ export default function ConfirmUpdateDialog({
         </AlertDialog.Content>
       </AlertDialog.Portal>
     </AlertDialog.Root>
-  )
+  );
 }

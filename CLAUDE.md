@@ -108,6 +108,10 @@ tests/
 - `npm run build:mac` — Build + package for macOS (DMG)
 - `npm run build:linux` — Build + package for Linux (AppImage + deb)
 - `npm run typecheck` — Run TypeScript type checking
+- `npm run lint` — Run ESLint
+- `npm run lint:fix` — Run ESLint with auto-fix
+- `npm run format` — Format code with Prettier
+- `npm run format:check` — Check formatting without writing
 - `npm run test` — Run unit tests (Vitest)
 - `npm run test:watch` — Run tests in watch mode
 

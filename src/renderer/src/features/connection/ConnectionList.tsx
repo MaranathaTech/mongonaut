@@ -1,13 +1,13 @@
-import { useState } from 'react'
-import { Plus, Trash2, Plug, Server } from 'lucide-react'
-import type { ConnectionConfig } from '../../../../shared/types'
-import { useConnectionStore } from '../../stores/connection-store'
+import { useState } from 'react';
+import { Plus, Trash2, Plug, Server } from 'lucide-react';
+import type { ConnectionConfig } from '../../../../shared/types';
+import { useConnectionStore } from '../../stores/connection-store';
 
 interface ConnectionListProps {
-  connections: ConnectionConfig[]
-  onNewConnection: () => void
-  onEditConnection: (config: ConnectionConfig) => void
-  onDeleteConnection: (id: string) => void
+  connections: ConnectionConfig[];
+  onNewConnection: () => void;
+  onEditConnection: (config: ConnectionConfig) => void;
+  onDeleteConnection: (id: string) => void;
 }
 
 export default function ConnectionList({
@@ -16,38 +16,38 @@ export default function ConnectionList({
   onEditConnection,
   onDeleteConnection
 }: ConnectionListProps): React.JSX.Element {
-  const connect = useConnectionStore((s) => s.connect)
-  const [connectingId, setConnectingId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const connect = useConnectionStore((s) => s.connect);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleConnect = async (config: ConnectionConfig): Promise<void> => {
-    setConnectingId(config.id)
-    setError(null)
+    setConnectingId(config.id);
+    setError(null);
     try {
-      const result = await window.api.connect(config)
+      const result = await window.api.connect(config);
       if (result.success) {
-        connect(config)
+        connect(config);
       } else {
-        setError(result.error || 'Connection failed')
+        setError(result.error || 'Connection failed');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Connection failed')
+      setError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
-      setConnectingId(null)
+      setConnectingId(null);
     }
-  }
+  };
 
   const displayHost = (config: ConnectionConfig): string => {
     if (config.mode === 'uri' && config.uri) {
       try {
-        const url = new URL(config.uri)
-        return url.host
+        const url = new URL(config.uri);
+        return url.host;
       } catch {
-        return config.uri.slice(0, 40)
+        return config.uri.slice(0, 40);
       }
     }
-    return `${config.host || 'localhost'}:${config.port || 27017}`
-  }
+    return `${config.host || 'localhost'}:${config.port || 27017}`;
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -56,7 +56,9 @@ export default function ConnectionList({
           <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
             <Plug className="h-8 w-8 text-gray-300 dark:text-zinc-600" />
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">No saved connections</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">
+                No saved connections
+              </p>
               <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
                 Create a new connection to get started
               </p>
@@ -76,15 +78,19 @@ export default function ConnectionList({
                 >
                   <Server className="h-3.5 w-3.5 flex-shrink-0 text-gray-400 dark:text-zinc-500" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-gray-800 dark:text-zinc-200">{config.name}</p>
-                    <p className="truncate text-xs text-gray-400 dark:text-zinc-500">{displayHost(config)}</p>
+                    <p className="truncate text-sm text-gray-800 dark:text-zinc-200">
+                      {config.name}
+                    </p>
+                    <p className="truncate text-xs text-gray-400 dark:text-zinc-500">
+                      {displayHost(config)}
+                    </p>
                   </div>
                 </button>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100">
                   <button
                     onClick={(e) => {
-                      e.stopPropagation()
-                      onEditConnection(config)
+                      e.stopPropagation();
+                      onEditConnection(config);
                     }}
                     className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
                     title="Edit"
@@ -93,8 +99,8 @@ export default function ConnectionList({
                   </button>
                   <button
                     onClick={(e) => {
-                      e.stopPropagation()
-                      onDeleteConnection(config.id)
+                      e.stopPropagation();
+                      onDeleteConnection(config.id);
                     }}
                     className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-red-500 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-red-400"
                     title="Delete"
@@ -124,5 +130,5 @@ export default function ConnectionList({
         </button>
       </div>
     </div>
-  )
+  );
 }

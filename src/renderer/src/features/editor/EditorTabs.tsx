@@ -1,26 +1,26 @@
-import { useCallback } from 'react'
-import { Plus, X } from 'lucide-react'
-import clsx from 'clsx'
-import { useEditorStore } from '../../stores/editor-store'
+import { useCallback } from 'react';
+import { Plus, X } from 'lucide-react';
+import clsx from 'clsx';
+import { useEditorStore } from '../../stores/editor-store';
 
 export default function EditorTabs(): React.JSX.Element {
-  const tabs = useEditorStore((s) => s.tabs)
-  const activeTabId = useEditorStore((s) => s.activeTabId)
-  const setActiveTab = useEditorStore((s) => s.setActiveTab)
-  const removeTab = useEditorStore((s) => s.removeTab)
-  const addTab = useEditorStore((s) => s.addTab)
+  const tabs = useEditorStore((s) => s.tabs);
+  const activeTabId = useEditorStore((s) => s.activeTabId);
+  const setActiveTab = useEditorStore((s) => s.setActiveTab);
+  const removeTab = useEditorStore((s) => s.removeTab);
+  const addTab = useEditorStore((s) => s.addTab);
 
   const handleClose = useCallback(
     (e: React.MouseEvent, id: string) => {
-      e.stopPropagation()
-      const tab = tabs.find((t) => t.id === id)
+      e.stopPropagation();
+      const tab = tabs.find((t) => t.id === id);
       if (tab?.isDirty) {
-        if (!window.confirm('This tab has unsaved changes. Close anyway?')) return
+        if (!window.confirm('This tab has unsaved changes. Close anyway?')) return;
       }
-      removeTab(id)
+      removeTab(id);
     },
     [tabs, removeTab]
-  )
+  );
 
   const handleNewTab = useCallback(() => {
     addTab({
@@ -30,8 +30,8 @@ export default function EditorTabs(): React.JSX.Element {
       collection: '',
       queryText: '',
       isDirty: false
-    })
-  }, [addTab])
+    });
+  }, [addTab]);
 
   return (
     <div className="flex h-9 flex-shrink-0 items-center border-b border-gray-200 bg-gray-50 dark:border-zinc-700 dark:bg-zinc-800/50">
@@ -75,5 +75,5 @@ export default function EditorTabs(): React.JSX.Element {
         <Plus className="h-3.5 w-3.5" />
       </button>
     </div>
-  )
+  );
 }

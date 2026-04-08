@@ -1,6 +1,6 @@
-import { contextBridge, ipcRenderer } from 'electron'
-import { IPC_CHANNELS } from '../shared/ipc-channels'
-import type { ConnectionConfig, QueryRequest } from '../shared/types'
+import { contextBridge, ipcRenderer } from 'electron';
+import { IPC_CHANNELS } from '../shared/ipc-channels';
+import type { ConnectionConfig, QueryRequest } from '../shared/types';
 
 const api = {
   // Connection
@@ -16,16 +16,13 @@ const api = {
 
   // Database
   listDatabases: () => ipcRenderer.invoke(IPC_CHANNELS.DATABASE_LIST),
-  listCollections: (database: string) =>
-    ipcRenderer.invoke(IPC_CHANNELS.COLLECTION_LIST, database),
+  listCollections: (database: string) => ipcRenderer.invoke(IPC_CHANNELS.COLLECTION_LIST, database),
   collectionStats: (database: string, collection: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.COLLECTION_STATS, database, collection),
 
   // Query
-  executeQuery: (request: QueryRequest) =>
-    ipcRenderer.invoke(IPC_CHANNELS.QUERY_EXECUTE, request),
-  explainQuery: (request: QueryRequest) =>
-    ipcRenderer.invoke(IPC_CHANNELS.QUERY_EXPLAIN, request),
+  executeQuery: (request: QueryRequest) => ipcRenderer.invoke(IPC_CHANNELS.QUERY_EXECUTE, request),
+  explainQuery: (request: QueryRequest) => ipcRenderer.invoke(IPC_CHANNELS.QUERY_EXPLAIN, request),
 
   // Document
   updateDocument: (database: string, collection: string, id: string, update: unknown) =>
@@ -44,8 +41,8 @@ const api = {
   clearHistory: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_CLEAR),
   searchHistory: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_SEARCH, query),
   deleteHistoryEntry: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id)
-}
+};
 
-export type MongonautAPI = typeof api
+export type MongonautAPI = typeof api;
 
-contextBridge.exposeInMainWorld('api', api)
+contextBridge.exposeInMainWorld('api', api);

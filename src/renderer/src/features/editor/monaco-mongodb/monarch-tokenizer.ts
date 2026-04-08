@@ -1,4 +1,4 @@
-import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
+import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 export const monarchLanguage: monaco.languages.IMonarchLanguage = {
   defaultToken: '',
@@ -23,15 +23,56 @@ export const monarchLanguage: monaco.languages.IMonarchLanguage = {
   ],
 
   operators: [
-    '$eq', '$gt', '$gte', '$in', '$lt', '$lte', '$ne', '$nin',
-    '$and', '$or', '$not', '$nor',
-    '$exists', '$type', '$regex', '$text', '$where', '$expr',
-    '$match', '$group', '$project', '$sort', '$limit', '$skip',
-    '$unwind', '$lookup', '$addFields', '$set', '$unset', '$inc',
-    '$push', '$pull', '$addToSet', '$pop', '$mul', '$min', '$max',
-    '$count', '$facet', '$out', '$merge', '$sample', '$bucket',
-    '$replaceRoot', '$replaceWith', '$sortByCount', '$graphLookup',
-    '$unionWith', '$redact', '$bucketAuto'
+    '$eq',
+    '$gt',
+    '$gte',
+    '$in',
+    '$lt',
+    '$lte',
+    '$ne',
+    '$nin',
+    '$and',
+    '$or',
+    '$not',
+    '$nor',
+    '$exists',
+    '$type',
+    '$regex',
+    '$text',
+    '$where',
+    '$expr',
+    '$match',
+    '$group',
+    '$project',
+    '$sort',
+    '$limit',
+    '$skip',
+    '$unwind',
+    '$lookup',
+    '$addFields',
+    '$set',
+    '$unset',
+    '$inc',
+    '$push',
+    '$pull',
+    '$addToSet',
+    '$pop',
+    '$mul',
+    '$min',
+    '$max',
+    '$count',
+    '$facet',
+    '$out',
+    '$merge',
+    '$sample',
+    '$bucket',
+    '$replaceRoot',
+    '$replaceWith',
+    '$sortByCount',
+    '$graphLookup',
+    '$unionWith',
+    '$redact',
+    '$bucketAuto'
   ],
 
   tokenizer: {
@@ -47,12 +88,15 @@ export const monarchLanguage: monaco.languages.IMonarchLanguage = {
       [/`([^`\\]|\\.)*`/, 'string'],
 
       // BSON constructors
-      [/[A-Z][a-zA-Z]*(?=\s*\()/, {
-        cases: {
-          '@bsonConstructors': 'type.identifier',
-          '@default': 'identifier'
+      [
+        /[A-Z][a-zA-Z]*(?=\s*\()/,
+        {
+          cases: {
+            '@bsonConstructors': 'type.identifier',
+            '@default': 'identifier'
+          }
         }
-      }],
+      ],
 
       // $ operators (e.g. $match, $gt)
       [/\$[a-zA-Z_][a-zA-Z0-9_]*/, 'keyword.operator'],
@@ -79,7 +123,7 @@ export const monarchLanguage: monaco.languages.IMonarchLanguage = {
       [/\/(?=[^/*])(?:[^/\\]|\\.)*\/[gimsuy]*/, 'regexp'],
 
       // Brackets
-      [/[{}()\[\]]/, '@brackets'],
+      [/[{}()[\]]/, '@brackets'],
 
       // Delimiters
       [/[,;:.]/, 'delimiter'],
@@ -94,4 +138,4 @@ export const monarchLanguage: monaco.languages.IMonarchLanguage = {
       [/[/*]/, 'comment']
     ]
   }
-}
+};

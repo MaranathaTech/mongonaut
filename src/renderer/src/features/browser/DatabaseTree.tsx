@@ -1,54 +1,54 @@
-import { useEffect, useCallback, useState, useRef } from 'react'
-import { Tree, NodeRendererProps } from 'react-arborist'
-import { Database, Table2, ChevronRight, ChevronDown, RefreshCw, Loader2 } from 'lucide-react'
-import { useBrowserStore } from '../../stores/browser-store'
-import { useEditorStore } from '../../stores/editor-store'
-import { DatabaseContextMenu, CollectionContextMenu } from './BrowserContextMenu'
-import CollectionStatsDialog from './CollectionStatsDialog'
+import { useEffect, useCallback, useState, useRef } from 'react';
+import { Tree, NodeRendererProps } from 'react-arborist';
+import { Database, Table2, ChevronRight, ChevronDown, RefreshCw, Loader2 } from 'lucide-react';
+import { useBrowserStore } from '../../stores/browser-store';
+import { useEditorStore } from '../../stores/editor-store';
+import { DatabaseContextMenu, CollectionContextMenu } from './BrowserContextMenu';
+import CollectionStatsDialog from './CollectionStatsDialog';
 
 interface TreeNode {
-  id: string
-  name: string
-  type: 'database' | 'collection'
-  database?: string
-  children?: TreeNode[]
+  id: string;
+  name: string;
+  type: 'database' | 'collection';
+  database?: string;
+  children?: TreeNode[];
 }
 
 export default function DatabaseTree(): React.JSX.Element {
-  const databases = useBrowserStore((s) => s.databases)
-  const collections = useBrowserStore((s) => s.collections)
-  const isLoading = useBrowserStore((s) => s.isLoading)
-  const loadDatabases = useBrowserStore((s) => s.loadDatabases)
-  const loadCollections = useBrowserStore((s) => s.loadCollections)
-  const refresh = useBrowserStore((s) => s.refresh)
-  const addTab = useEditorStore((s) => s.addTab)
+  const databases = useBrowserStore((s) => s.databases);
+  const collections = useBrowserStore((s) => s.collections);
+  const isLoading = useBrowserStore((s) => s.isLoading);
+  const loadDatabases = useBrowserStore((s) => s.loadDatabases);
+  const loadCollections = useBrowserStore((s) => s.loadCollections);
+  const refresh = useBrowserStore((s) => s.refresh);
+  const addTab = useEditorStore((s) => s.addTab);
 
   const [statsDialog, setStatsDialog] = useState<{
-    open: boolean
-    database: string
-    collection: string
-  }>({ open: false, database: '', collection: '' })
+    open: boolean;
+    database: string;
+    collection: string;
+  }>({ open: false, database: '', collection: '' });
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [treeHeight, setTreeHeight] = useState(400)
-
-  useEffect(() => {
-    loadDatabases()
-  }, [loadDatabases])
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [treeHeight, setTreeHeight] = useState(400);
 
   useEffect(() => {
-    if (!containerRef.current) return
+    loadDatabases();
+  }, [loadDatabases]);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setTreeHeight(entry.contentRect.height)
+        setTreeHeight(entry.contentRect.height);
       }
-    })
-    observer.observe(containerRef.current)
-    return () => observer.disconnect()
-  }, [])
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const treeData: TreeNode[] = databases.map((db) => {
-    const dbCollections = collections[db.name]
+    const dbCollections = collections[db.name];
     return {
       id: `db:${db.name}`,
       name: db.name,
@@ -61,22 +61,22 @@ export default function DatabaseTree(): React.JSX.Element {
             database: db.name
           }))
         : undefined
-    }
-  })
+    };
+  });
 
   const handleToggle = useCallback(
     (id: string) => {
       // When a database node is expanded, load its collections if not already loaded
-      const match = id.match(/^db:(.+)$/)
+      const match = id.match(/^db:(.+)$/);
       if (match) {
-        const dbName = match[1]
+        const dbName = match[1];
         if (!collections[dbName]) {
-          loadCollections(dbName)
+          loadCollections(dbName);
         }
       }
     },
     [collections, loadCollections]
-  )
+  );
 
   const openQueryTab = useCallback(
     (database: string, collection: string) => {
@@ -87,21 +87,21 @@ export default function DatabaseTree(): React.JSX.Element {
         collection,
         queryText: `db.${collection}.find({})`,
         isDirty: false
-      })
+      });
     },
     [addTab]
-  )
+  );
 
   const openStats = useCallback((database: string, collection: string) => {
-    setStatsDialog({ open: true, database, collection })
-  }, [])
+    setStatsDialog({ open: true, database, collection });
+  }, []);
 
   const refreshDatabase = useCallback(
     (database: string) => {
-      loadCollections(database)
+      loadCollections(database);
     },
     [loadCollections]
-  )
+  );
 
   if (isLoading && databases.length === 0) {
     return (
@@ -109,7 +109,7 @@ export default function DatabaseTree(): React.JSX.Element {
         <Loader2 className="h-4 w-4 animate-spin text-gray-400 dark:text-zinc-500" />
         <span className="text-xs text-gray-400 dark:text-zinc-500">Loading databases...</span>
       </div>
-    )
+    );
   }
 
   if (databases.length === 0) {
@@ -117,7 +117,7 @@ export default function DatabaseTree(): React.JSX.Element {
       <div className="p-3">
         <p className="text-xs text-gray-400 dark:text-zinc-500">No databases found</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -163,13 +163,13 @@ export default function DatabaseTree(): React.JSX.Element {
         collection={statsDialog.collection}
       />
     </div>
-  )
+  );
 }
 
 interface TreeNodeRendererExtraProps {
-  onOpenQueryTab: (database: string, collection: string) => void
-  onViewStats: (database: string, collection: string) => void
-  onRefreshDatabase: (database: string) => void
+  onOpenQueryTab: (database: string, collection: string) => void;
+  onViewStats: (database: string, collection: string) => void;
+  onRefreshDatabase: (database: string) => void;
 }
 
 function TreeNodeRenderer({
@@ -179,30 +179,30 @@ function TreeNodeRenderer({
   onViewStats,
   onRefreshDatabase
 }: NodeRendererProps<TreeNode> & TreeNodeRendererExtraProps): React.JSX.Element {
-  const data = node.data
-  const isDb = data.type === 'database'
-  const dbName = isDb ? data.name : data.database!
-  const selectedCollection = useBrowserStore((s) => s.selectedCollection)
-  const selectCollection = useBrowserStore((s) => s.selectCollection)
+  const data = node.data;
+  const isDb = data.type === 'database';
+  const dbName = isDb ? data.name : data.database!;
+  const selectedCollection = useBrowserStore((s) => s.selectedCollection);
+  const selectCollection = useBrowserStore((s) => s.selectCollection);
 
   const isSelected =
     !isDb &&
     selectedCollection?.database === dbName &&
-    selectedCollection?.collection === data.name
+    selectedCollection?.collection === data.name;
 
   const handleClick = (): void => {
     if (isDb) {
-      node.toggle()
+      node.toggle();
     } else {
-      selectCollection(dbName, data.name)
+      selectCollection(dbName, data.name);
     }
-  }
+  };
 
   const handleDoubleClick = (): void => {
     if (!isDb) {
-      onOpenQueryTab(dbName, data.name)
+      onOpenQueryTab(dbName, data.name);
     }
-  }
+  };
 
   const content = (
     <div
@@ -232,14 +232,14 @@ function TreeNodeRenderer({
       )}
       <span className="truncate">{data.name}</span>
     </div>
-  )
+  );
 
   if (isDb) {
     return (
       <DatabaseContextMenu onRefreshCollections={() => onRefreshDatabase(dbName)}>
         {content}
       </DatabaseContextMenu>
-    )
+    );
   }
 
   return (
@@ -250,5 +250,5 @@ function TreeNodeRenderer({
     >
       {content}
     </CollectionContextMenu>
-  )
+  );
 }

@@ -1,33 +1,37 @@
-import React from 'react'
-import { AlertTriangle, RotateCcw } from 'lucide-react'
+import React from 'react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 
 interface Props {
-  children: React.ReactNode
-  fallbackLabel?: string
+  children: React.ReactNode;
+  fallbackLabel?: string;
 }
 
 interface State {
-  hasError: boolean
-  error: Error | null
+  hasError: boolean;
+  error: Error | null;
 }
 
 export default class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error(`[ErrorBoundary${this.props.fallbackLabel ? ` - ${this.props.fallbackLabel}` : ''}]`, error, errorInfo)
+    console.error(
+      `[ErrorBoundary${this.props.fallbackLabel ? ` - ${this.props.fallbackLabel}` : ''}]`,
+      error,
+      errorInfo
+    );
   }
 
   handleRetry = (): void => {
-    this.setState({ hasError: false, error: null })
-  }
+    this.setState({ hasError: false, error: null });
+  };
 
   render(): React.ReactNode {
     if (this.state.hasError) {
@@ -52,9 +56,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             Retry
           </button>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }

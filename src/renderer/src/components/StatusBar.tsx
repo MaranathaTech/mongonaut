@@ -1,30 +1,30 @@
-import { Circle, Sun, Moon } from 'lucide-react'
-import { useConnectionStore } from '../stores/connection-store'
-import { useResultsStore } from '../stores/results-store'
-import { useThemeStore } from '../stores/theme-store'
+import { Circle, Sun, Moon } from 'lucide-react';
+import { useConnectionStore } from '../stores/connection-store';
+import { useResultsStore } from '../stores/results-store';
+import { useThemeStore } from '../stores/theme-store';
 
 export default function StatusBar(): React.JSX.Element {
-  const isConnected = useConnectionStore((s) => s.isConnected)
-  const config = useConnectionStore((s) => s.connectionConfig)
-  const results = useResultsStore((s) => s.results)
-  const isLoading = useResultsStore((s) => s.isLoading)
-  const theme = useThemeStore((s) => s.theme)
-  const toggleTheme = useThemeStore((s) => s.toggleTheme)
+  const isConnected = useConnectionStore((s) => s.isConnected);
+  const config = useConnectionStore((s) => s.connectionConfig);
+  const results = useResultsStore((s) => s.results);
+  const isLoading = useResultsStore((s) => s.isLoading);
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   const connectionLabel = (): string => {
-    if (!isConnected || !config) return 'Disconnected'
+    if (!isConnected || !config) return 'Disconnected';
     if (config.mode === 'uri' && config.uri) {
       try {
-        const url = new URL(config.uri)
-        return `Connected to ${url.host}`
+        const url = new URL(config.uri);
+        return `Connected to ${url.host}`;
       } catch {
-        return 'Connected'
+        return 'Connected';
       }
     }
-    return `Connected to ${config.host || 'localhost'}:${config.port || 27017}`
-  }
+    return `Connected to ${config.host || 'localhost'}:${config.port || 27017}`;
+  };
 
-  const databaseLabel = config?.database || null
+  const databaseLabel = config?.database || null;
 
   return (
     <div className="flex h-7 flex-shrink-0 items-center border-t border-gray-200 bg-gray-50 px-3 text-xs text-gray-500 dark:border-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-500">
@@ -55,5 +55,5 @@ export default function StatusBar(): React.JSX.Element {
         </button>
       </div>
     </div>
-  )
+  );
 }

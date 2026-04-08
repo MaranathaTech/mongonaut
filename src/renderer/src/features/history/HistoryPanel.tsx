@@ -1,91 +1,83 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import * as ContextMenu from '@radix-ui/react-context-menu'
-import * as AlertDialog from '@radix-ui/react-alert-dialog'
-import * as Tooltip from '@radix-ui/react-tooltip'
-import {
-  ChevronDown,
-  ChevronRight,
-  Trash2,
-  Search,
-  ExternalLink,
-  Copy,
-  X
-} from 'lucide-react'
-import { useHistoryStore } from '../../stores/history-store'
-import { useEditorStore } from '../../stores/editor-store'
-import type { QueryHistoryEntry } from '../../../../shared/types'
+import { useState, useEffect, useCallback, useRef } from 'react';
+import * as ContextMenu from '@radix-ui/react-context-menu';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
+import * as Tooltip from '@radix-ui/react-tooltip';
+import { ChevronDown, ChevronRight, Trash2, Search, ExternalLink, Copy, X } from 'lucide-react';
+import { useHistoryStore } from '../../stores/history-store';
+import { useEditorStore } from '../../stores/editor-store';
+import type { QueryHistoryEntry } from '../../../../shared/types';
 
 function formatRelativeTime(timestamp: number): string {
-  const now = Date.now()
-  const diff = now - timestamp
-  const seconds = Math.floor(diff / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
+  const now = Date.now();
+  const diff = now - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
 
-  if (seconds < 60) return 'just now'
-  if (minutes < 60) return `${minutes} min ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days === 1) return 'yesterday'
-  if (days < 7) return `${days}d ago`
-  return new Date(timestamp).toLocaleDateString()
+  if (seconds < 60) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
 }
 
 function formatNumber(n: number): string {
-  return n.toLocaleString()
+  return n.toLocaleString();
 }
 
 function truncateQuery(text: string, maxLen = 60): string {
-  const singleLine = text.replace(/\s+/g, ' ').trim()
-  if (singleLine.length <= maxLen) return singleLine
-  return singleLine.slice(0, maxLen) + '\u2026'
+  const singleLine = text.replace(/\s+/g, ' ').trim();
+  if (singleLine.length <= maxLen) return singleLine;
+  return singleLine.slice(0, maxLen) + '\u2026';
 }
 
 interface HistoryPanelProps {
-  isExpanded: boolean
-  onToggle: () => void
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
 export default function HistoryPanel({
   isExpanded,
   onToggle
 }: HistoryPanelProps): React.JSX.Element {
-  const entries = useHistoryStore((s) => s.filteredEntries)
-  const searchQuery = useHistoryStore((s) => s.searchQuery)
-  const loadHistory = useHistoryStore((s) => s.loadHistory)
-  const searchHistory = useHistoryStore((s) => s.searchHistory)
-  const clearHistory = useHistoryStore((s) => s.clearHistory)
-  const deleteEntry = useHistoryStore((s) => s.deleteEntry)
-  const setSearchQuery = useHistoryStore((s) => s.setSearchQuery)
+  const entries = useHistoryStore((s) => s.filteredEntries);
+  const searchQuery = useHistoryStore((s) => s.searchQuery);
+  const loadHistory = useHistoryStore((s) => s.loadHistory);
+  const searchHistory = useHistoryStore((s) => s.searchHistory);
+  const clearHistory = useHistoryStore((s) => s.clearHistory);
+  const deleteEntry = useHistoryStore((s) => s.deleteEntry);
+  const setSearchQuery = useHistoryStore((s) => s.setSearchQuery);
 
-  const addTab = useEditorStore((s) => s.addTab)
-  const activeTabId = useEditorStore((s) => s.activeTabId)
-  const updateTabQuery = useEditorStore((s) => s.updateTabQuery)
+  const addTab = useEditorStore((s) => s.addTab);
+  const activeTabId = useEditorStore((s) => s.activeTabId);
+  const updateTabQuery = useEditorStore((s) => s.updateTabQuery);
 
-  const [clearDialogOpen, setClearDialogOpen] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (isExpanded) {
-      loadHistory()
+      loadHistory();
     }
-  }, [isExpanded, loadHistory])
+  }, [isExpanded, loadHistory]);
 
   const handleSearchChange = useCallback(
     (value: string) => {
-      setSearchQuery(value)
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      setSearchQuery(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
-        searchHistory(value)
-      }, 300)
+        searchHistory(value);
+      }, 300);
     },
     [setSearchQuery, searchHistory]
-  )
+  );
 
   const loadIntoEditor = useCallback(
     (entry: QueryHistoryEntry) => {
       if (activeTabId) {
-        updateTabQuery(activeTabId, entry.queryText)
+        updateTabQuery(activeTabId, entry.queryText);
       } else {
         addTab({
           id: crypto.randomUUID(),
@@ -94,11 +86,11 @@ export default function HistoryPanel({
           collection: entry.collection,
           queryText: entry.queryText,
           isDirty: false
-        })
+        });
       }
     },
     [activeTabId, updateTabQuery, addTab]
-  )
+  );
 
   const openInNewTab = useCallback(
     (entry: QueryHistoryEntry) => {
@@ -109,19 +101,19 @@ export default function HistoryPanel({
         collection: entry.collection,
         queryText: entry.queryText,
         isDirty: false
-      })
+      });
     },
     [addTab]
-  )
+  );
 
   const copyQuery = useCallback((entry: QueryHistoryEntry) => {
-    navigator.clipboard.writeText(entry.queryText)
-  }, [])
+    navigator.clipboard.writeText(entry.queryText);
+  }, []);
 
   const handleClear = async (): Promise<void> => {
-    await clearHistory()
-    setClearDialogOpen(false)
-  }
+    await clearHistory();
+    setClearDialogOpen(false);
+  };
 
   return (
     <div className="flex flex-col overflow-hidden">
@@ -155,8 +147,8 @@ export default function HistoryPanel({
                   Clear all query history?
                 </AlertDialog.Title>
                 <AlertDialog.Description className="mt-2 text-xs text-gray-500 dark:text-zinc-400">
-                  This will permanently delete all saved query history entries. This action cannot be
-                  undone.
+                  This will permanently delete all saved query history entries. This action cannot
+                  be undone.
                 </AlertDialog.Description>
                 <div className="mt-4 flex justify-end gap-2">
                   <AlertDialog.Cancel className="rounded px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-700">
@@ -221,7 +213,7 @@ export default function HistoryPanel({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function HistoryEntryItem({
@@ -231,11 +223,11 @@ function HistoryEntryItem({
   onCopyQuery,
   onDelete
 }: {
-  entry: QueryHistoryEntry
-  onClick: () => void
-  onOpenInNewTab: () => void
-  onCopyQuery: () => void
-  onDelete: () => void
+  entry: QueryHistoryEntry;
+  onClick: () => void;
+  onOpenInNewTab: () => void;
+  onCopyQuery: () => void;
+  onDelete: () => void;
 }): React.JSX.Element {
   return (
     <ContextMenu.Root>
@@ -305,5 +297,5 @@ function HistoryEntryItem({
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>
-  )
+  );
 }

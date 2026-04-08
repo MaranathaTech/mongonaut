@@ -1,48 +1,48 @@
-import { useCallback } from 'react'
-import { X, RotateCcw } from 'lucide-react'
-import { useDocumentStore } from '../../stores/document-store'
-import { useResultsStore } from '../../stores/results-store'
-import TreeEditor from './TreeEditor'
-import JsonDocumentEditor from './JsonDocumentEditor'
-import ConfirmDeleteDialog from './ConfirmDeleteDialog'
-import ConfirmUpdateDialog from './ConfirmUpdateDialog'
-import ConfirmInsertDialog from './ConfirmInsertDialog'
-import ConfirmDiscardDialog from './ConfirmDiscardDialog'
+import { useCallback } from 'react';
+import { X, RotateCcw } from 'lucide-react';
+import { useDocumentStore } from '../../stores/document-store';
+import { useResultsStore } from '../../stores/results-store';
+import TreeEditor from './TreeEditor';
+import JsonDocumentEditor from './JsonDocumentEditor';
+import ConfirmDeleteDialog from './ConfirmDeleteDialog';
+import ConfirmUpdateDialog from './ConfirmUpdateDialog';
+import ConfirmInsertDialog from './ConfirmInsertDialog';
+import ConfirmDiscardDialog from './ConfirmDiscardDialog';
 
 export default function DocumentEditorPanel(): React.JSX.Element | null {
-  const isOpen = useDocumentStore((s) => s.isOpen)
-  const action = useDocumentStore((s) => s.action)
-  const editorMode = useDocumentStore((s) => s.editorMode)
-  const originalDocument = useDocumentStore((s) => s.originalDocument)
-  const editedDocument = useDocumentStore((s) => s.editedDocument)
-  const isDirty = useDocumentStore((s) => s.isDirty)
-  const confirmDialog = useDocumentStore((s) => s.confirmDialog)
+  const isOpen = useDocumentStore((s) => s.isOpen);
+  const action = useDocumentStore((s) => s.action);
+  const editorMode = useDocumentStore((s) => s.editorMode);
+  const originalDocument = useDocumentStore((s) => s.originalDocument);
+  const editedDocument = useDocumentStore((s) => s.editedDocument);
+  const isDirty = useDocumentStore((s) => s.isDirty);
+  const confirmDialog = useDocumentStore((s) => s.confirmDialog);
 
-  const setEditedDocument = useDocumentStore((s) => s.setEditedDocument)
-  const setEditorMode = useDocumentStore((s) => s.setEditorMode)
-  const resetToOriginal = useDocumentStore((s) => s.resetToOriginal)
-  const tryClose = useDocumentStore((s) => s.tryClose)
-  const requestSave = useDocumentStore((s) => s.requestSave)
-  const requestDelete = useDocumentStore((s) => s.requestDelete)
-  const requestInsert = useDocumentStore((s) => s.requestInsert)
+  const setEditedDocument = useDocumentStore((s) => s.setEditedDocument);
+  const setEditorMode = useDocumentStore((s) => s.setEditorMode);
+  const resetToOriginal = useDocumentStore((s) => s.resetToOriginal);
+  const tryClose = useDocumentStore((s) => s.tryClose);
+  const requestSave = useDocumentStore((s) => s.requestSave);
+  const requestDelete = useDocumentStore((s) => s.requestDelete);
+  const requestInsert = useDocumentStore((s) => s.requestInsert);
 
-  const refreshResults = useRefreshResults()
+  const refreshResults = useRefreshResults();
 
   const handleConfirm = useCallback(async () => {
     if (confirmDialog) {
-      await confirmDialog.onConfirm()
-      refreshResults()
+      await confirmDialog.onConfirm();
+      refreshResults();
     }
-  }, [confirmDialog, refreshResults])
+  }, [confirmDialog, refreshResults]);
 
   const handleCancel = useCallback(() => {
-    confirmDialog?.onCancel()
-  }, [confirmDialog])
+    confirmDialog?.onCancel();
+  }, [confirmDialog]);
 
-  if (!isOpen || !editedDocument) return null
+  if (!isOpen || !editedDocument) return null;
 
-  const isInsert = action === 'insert'
-  const title = isInsert ? 'Insert Document' : 'Edit Document'
+  const isInsert = action === 'insert';
+  const title = isInsert ? 'Insert Document' : 'Edit Document';
 
   return (
     <>
@@ -56,7 +56,9 @@ export default function DocumentEditorPanel(): React.JSX.Element | null {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 dark:border-zinc-700 px-4 py-2">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{title}</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+                {title}
+              </span>
               {isDirty && (
                 <span className="rounded bg-yellow-900/40 px-1.5 py-0.5 text-[10px] text-yellow-400">
                   Modified
@@ -190,23 +192,19 @@ export default function DocumentEditorPanel(): React.JSX.Element | null {
         />
       )}
       {confirmDialog?.type === 'discard' && (
-        <ConfirmDiscardDialog
-          open
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
+        <ConfirmDiscardDialog open onConfirm={handleConfirm} onCancel={handleCancel} />
       )}
     </>
-  )
+  );
 }
 
 function useRefreshResults(): () => void {
-  const lastQuery = useResultsStore((s) => s.lastQuery)
-  const executeQuery = useResultsStore((s) => s.executeQuery)
+  const lastQuery = useResultsStore((s) => s.lastQuery);
+  const executeQuery = useResultsStore((s) => s.executeQuery);
 
   return useCallback(() => {
     if (lastQuery) {
-      executeQuery(lastQuery.database, lastQuery.collection, lastQuery.queryText)
+      executeQuery(lastQuery.database, lastQuery.collection, lastQuery.queryText);
     }
-  }, [lastQuery, executeQuery])
+  }, [lastQuery, executeQuery]);
 }

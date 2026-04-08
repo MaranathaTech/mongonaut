@@ -1,6 +1,6 @@
-import { useMemo, useCallback, useRef } from 'react'
-import { Pencil, Copy, Trash2 } from 'lucide-react'
-import { AgGridReact } from 'ag-grid-react'
+import { useMemo, useCallback, useRef } from 'react';
+import { Pencil, Copy, Trash2 } from 'lucide-react';
+import { AgGridReact } from 'ag-grid-react';
 import {
   ModuleRegistry,
   ClientSideRowModelModule,
@@ -13,17 +13,17 @@ import {
   type ValueFormatterParams,
   type CellValueChangedEvent,
   type ICellRendererParams
-} from 'ag-grid-community'
-import type { SerializedDocument } from '../../../../shared/types'
-import { useDocumentStore } from '../../stores/document-store'
-import { useThemeStore } from '../../stores/theme-store'
+} from 'ag-grid-community';
+import type { SerializedDocument } from '../../../../shared/types';
+import { useDocumentStore } from '../../stores/document-store';
+import { useThemeStore } from '../../stores/theme-store';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
   ColumnAutoSizeModule,
   TextFilterModule,
   TextEditorModule
-])
+]);
 
 const darkTheme = themeQuartz.withParams({
   accentColor: '#3b82f6',
@@ -37,7 +37,7 @@ const darkTheme = themeQuartz.withParams({
   spacing: 6,
   fontSize: 13,
   headerFontSize: 12
-})
+});
 
 const lightTheme = themeQuartz.withParams({
   accentColor: '#3b82f6',
@@ -51,54 +51,54 @@ const lightTheme = themeQuartz.withParams({
   spacing: 6,
   fontSize: 13,
   headerFontSize: 12
-})
+});
 
 function formatCellValue(value: unknown): string {
-  if (value === null) return 'null'
-  if (value === undefined) return ''
+  if (value === null) return 'null';
+  if (value === undefined) return '';
   if (typeof value === 'object') {
     // Handle Extended JSON representations
     if (value !== null && '$oid' in (value as Record<string, unknown>)) {
-      return String((value as Record<string, unknown>).$oid)
+      return String((value as Record<string, unknown>).$oid);
     }
     if (value !== null && '$date' in (value as Record<string, unknown>)) {
-      const d = (value as Record<string, unknown>).$date
+      const d = (value as Record<string, unknown>).$date;
       if (typeof d === 'string') {
         try {
-          return new Date(d).toLocaleString()
+          return new Date(d).toLocaleString();
         } catch {
-          return String(d)
+          return String(d);
         }
       }
-      return String(d)
+      return String(d);
     }
     if (Array.isArray(value)) {
-      return `Array(${value.length})`
+      return `Array(${value.length})`;
     }
-    return JSON.stringify(value)
+    return JSON.stringify(value);
   }
-  return String(value)
+  return String(value);
 }
 
 function isEditableValue(value: unknown): boolean {
-  if (value === null || value === undefined) return true
-  const type = typeof value
-  return type === 'string' || type === 'number' || type === 'boolean'
+  if (value === null || value === undefined) return true;
+  const type = typeof value;
+  return type === 'string' || type === 'number' || type === 'boolean';
 }
 
 interface TableViewProps {
-  documents: SerializedDocument[]
-  database: string
-  collection: string
+  documents: SerializedDocument[];
+  database: string;
+  collection: string;
 }
 
 function ActionsRenderer(params: ICellRendererParams): React.JSX.Element {
-  const doc = params.data as SerializedDocument
-  const openDocument = useDocumentStore((s) => s.openDocument)
-  const openInsert = useDocumentStore((s) => s.openInsert)
-  const setConfirmDialog = useDocumentStore((s) => s.setConfirmDialog)
-  const database = (params.context as { database: string }).database
-  const collection = (params.context as { collection: string }).collection
+  const doc = params.data as SerializedDocument;
+  const openDocument = useDocumentStore((s) => s.openDocument);
+  const openInsert = useDocumentStore((s) => s.openInsert);
+  const setConfirmDialog = useDocumentStore((s) => s.setConfirmDialog);
+  const database = (params.context as { database: string }).database;
+  const collection = (params.context as { collection: string }).collection;
 
   return (
     <div className="flex items-center gap-0.5 h-full">
@@ -106,8 +106,8 @@ function ActionsRenderer(params: ICellRendererParams): React.JSX.Element {
         className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
         title="Edit document"
         onClick={(e) => {
-          e.stopPropagation()
-          openDocument(doc, database, collection)
+          e.stopPropagation();
+          openDocument(doc, database, collection);
         }}
       >
         <Pencil className="h-3 w-3" />
@@ -116,10 +116,10 @@ function ActionsRenderer(params: ICellRendererParams): React.JSX.Element {
         className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
         title="Clone document"
         onClick={(e) => {
-          e.stopPropagation()
-          const cloned = { ...doc }
-          delete cloned._id
-          openInsert(cloned, database, collection)
+          e.stopPropagation();
+          const cloned = { ...doc };
+          delete cloned._id;
+          openInsert(cloned, database, collection);
         }}
       >
         <Copy className="h-3 w-3" />
@@ -128,67 +128,75 @@ function ActionsRenderer(params: ICellRendererParams): React.JSX.Element {
         className="rounded p-1 text-gray-400 hover:bg-red-100 hover:text-red-600 dark:text-zinc-500 dark:hover:bg-red-900/30 dark:hover:text-red-400"
         title="Delete document"
         onClick={(e) => {
-          e.stopPropagation()
+          e.stopPropagation();
           // Open the document first so delete knows what to delete
           useDocumentStore.setState({
             originalDocument: doc,
             editedDocument: doc,
             database,
             collection
-          })
+          });
           // Directly set up delete confirmation
           setConfirmDialog({
             type: 'delete',
             onConfirm: async () => {
-              const idValue = doc._id
-              const serializedId = JSON.stringify(idValue)
-              const result = await window.api.deleteDocument(database, collection, serializedId) as { success: boolean; error?: string }
+              const idValue = doc._id;
+              const serializedId = JSON.stringify(idValue);
+              const result = (await window.api.deleteDocument(
+                database,
+                collection,
+                serializedId
+              )) as { success: boolean; error?: string };
               if (result.success) {
-                useDocumentStore.getState().setConfirmDialog(null)
-                useDocumentStore.getState().closeEditor()
+                useDocumentStore.getState().setConfirmDialog(null);
+                useDocumentStore.getState().closeEditor();
               }
-              return result
+              return result;
             },
             onCancel: () => {
-              useDocumentStore.getState().setConfirmDialog(null)
+              useDocumentStore.getState().setConfirmDialog(null);
               useDocumentStore.setState({
                 originalDocument: null,
                 editedDocument: null
-              })
+              });
             }
-          })
+          });
         }}
       >
         <Trash2 className="h-3 w-3" />
       </button>
     </div>
-  )
+  );
 }
 
-export default function TableView({ documents, database, collection }: TableViewProps): React.JSX.Element {
-  const gridRef = useRef<AgGridReact>(null)
-  const openDocument = useDocumentStore((s) => s.openDocument)
-  const theme = useThemeStore((s) => s.theme)
-  const agTheme = theme === 'dark' ? darkTheme : lightTheme
+export default function TableView({
+  documents,
+  database,
+  collection
+}: TableViewProps): React.JSX.Element {
+  const gridRef = useRef<AgGridReact>(null);
+  const openDocument = useDocumentStore((s) => s.openDocument);
+  const theme = useThemeStore((s) => s.theme);
+  const agTheme = theme === 'dark' ? darkTheme : lightTheme;
 
   const columnDefs = useMemo<ColDef[]>(() => {
-    if (documents.length === 0) return []
+    if (documents.length === 0) return [];
 
     // Collect all unique keys across all documents
-    const keySet = new Set<string>()
+    const keySet = new Set<string>();
     for (const doc of documents) {
       for (const key of Object.keys(doc)) {
-        keySet.add(key)
+        keySet.add(key);
       }
     }
 
-    const keys = Array.from(keySet)
+    const keys = Array.from(keySet);
 
     // Ensure _id is always first
-    const idIndex = keys.indexOf('_id')
+    const idIndex = keys.indexOf('_id');
     if (idIndex > 0) {
-      keys.splice(idIndex, 1)
-      keys.unshift('_id')
+      keys.splice(idIndex, 1);
+      keys.unshift('_id');
     }
 
     const dataCols: ColDef[] = keys.map((key) => ({
@@ -200,32 +208,32 @@ export default function TableView({ documents, database, collection }: TableView
       resizable: true,
       sortable: true,
       editable: (params) => {
-        if (key === '_id') return false
-        return isEditableValue(params.data[key])
+        if (key === '_id') return false;
+        return isEditableValue(params.data[key]);
       },
       valueFormatter: (params: ValueFormatterParams) => formatCellValue(params.value),
       valueSetter: (params) => {
-        const newValue = params.newValue
-        const field = params.colDef.field
-        if (!field) return false
+        const newValue = params.newValue;
+        const field = params.colDef.field;
+        if (!field) return false;
 
         // Parse the edited value back to the appropriate type
-        const oldValue = params.data[field]
-        let parsed: unknown = newValue
+        const oldValue = params.data[field];
+        let parsed: unknown = newValue;
 
         if (typeof oldValue === 'number') {
-          parsed = parseFloat(newValue)
-          if (isNaN(parsed as number)) return false
+          parsed = parseFloat(newValue);
+          if (isNaN(parsed as number)) return false;
         } else if (typeof oldValue === 'boolean') {
-          parsed = newValue === 'true' || newValue === true
+          parsed = newValue === 'true' || newValue === true;
         } else if (oldValue === null && newValue === 'null') {
-          parsed = null
+          parsed = null;
         }
 
-        params.data[field] = parsed
-        return true
+        params.data[field] = parsed;
+        return true;
       }
-    }))
+    }));
 
     // Actions column
     const actionsCol: ColDef = {
@@ -239,10 +247,10 @@ export default function TableView({ documents, database, collection }: TableView
       pinned: 'right',
       cellRenderer: ActionsRenderer,
       cellStyle: { padding: '0 4px' }
-    }
+    };
 
-    return [...dataCols, actionsCol]
-  }, [documents])
+    return [...dataCols, actionsCol];
+  }, [documents]);
 
   const defaultColDef = useMemo<ColDef>(
     () => ({
@@ -251,25 +259,25 @@ export default function TableView({ documents, database, collection }: TableView
       minWidth: 80
     }),
     []
-  )
+  );
 
   const onGridReady = useCallback((params: GridReadyEvent) => {
     // Auto-size columns on first render
-    params.api.autoSizeAllColumns()
-  }, [])
+    params.api.autoSizeAllColumns();
+  }, []);
 
   const onCellValueChanged = useCallback(
     (event: CellValueChangedEvent) => {
-      const doc = event.data as SerializedDocument
+      const doc = event.data as SerializedDocument;
       // Open the document editor with the modified doc and trigger save confirmation
-      openDocument(doc, database, collection)
+      openDocument(doc, database, collection);
       // Immediately mark as dirty and request save
-      useDocumentStore.getState().requestSave()
+      useDocumentStore.getState().requestSave();
     },
     [openDocument, database, collection]
-  )
+  );
 
-  const context = useMemo(() => ({ database, collection }), [database, collection])
+  const context = useMemo(() => ({ database, collection }), [database, collection]);
 
   return (
     <div className="h-full w-full">
@@ -289,5 +297,5 @@ export default function TableView({ documents, database, collection }: TableView
         stopEditingWhenCellsLoseFocus={true}
       />
     </div>
-  )
+  );
 }

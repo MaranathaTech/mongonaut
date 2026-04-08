@@ -1,23 +1,23 @@
-import type * as monacoType from 'monaco-editor/esm/vs/editor/editor.api'
-import { monarchLanguage } from './monarch-tokenizer'
-import { createCompletionProvider } from './completion-provider'
-import { createHoverProvider } from './hover-provider'
-import { createDiagnosticsProvider } from './diagnostics-provider'
-import type { SchemaField } from '../../../../../shared/types'
+import type * as monacoType from 'monaco-editor/esm/vs/editor/editor.api';
+import { monarchLanguage } from './monarch-tokenizer';
+import { createCompletionProvider } from './completion-provider';
+import { createHoverProvider } from './hover-provider';
+import { createDiagnosticsProvider } from './diagnostics-provider';
+import type { SchemaField } from '../../../../../shared/types';
 
-const LANGUAGE_ID = 'mongodb'
+const LANGUAGE_ID = 'mongodb';
 
-let registered = false
+let registered = false;
 
 export function registerMongoDBLanguage(monaco: typeof monacoType): void {
-  if (registered) return
-  registered = true
+  if (registered) return;
+  registered = true;
 
   // Register the language identifier
-  monaco.languages.register({ id: LANGUAGE_ID })
+  monaco.languages.register({ id: LANGUAGE_ID });
 
   // Set the Monarch tokenizer
-  monaco.languages.setMonarchTokensProvider(LANGUAGE_ID, monarchLanguage)
+  monaco.languages.setMonarchTokensProvider(LANGUAGE_ID, monarchLanguage);
 
   // Set language configuration (brackets, auto-closing, etc.)
   monaco.languages.setLanguageConfiguration(LANGUAGE_ID, {
@@ -53,10 +53,10 @@ export function registerMongoDBLanguage(monaco: typeof monacoType): void {
       }
     },
     indentationRules: {
-      increaseIndentPattern: /^\s*.*[\{\[\(]\s*$/,
-      decreaseIndentPattern: /^\s*[\}\]\)]/
+      increaseIndentPattern: /^\s*.*[{[(]\s*$/,
+      decreaseIndentPattern: /^\s*[}\])]/
     }
-  })
+  });
 
   // Define the MongoDB dark theme
   monaco.editor.defineTheme('mongodb-dark', {
@@ -92,7 +92,7 @@ export function registerMongoDBLanguage(monaco: typeof monacoType): void {
       'input.background': '#18181B',
       'input.border': '#3F3F46'
     }
-  })
+  });
 
   // Define the MongoDB light theme
   monaco.editor.defineTheme('mongodb-light', {
@@ -128,7 +128,7 @@ export function registerMongoDBLanguage(monaco: typeof monacoType): void {
       'input.background': '#FFFFFF',
       'input.border': '#D1D5DB'
     }
-  })
+  });
 }
 
 /** Register the completion provider with dynamic collection/field data */
@@ -140,7 +140,7 @@ export function registerCompletionProvider(
   return monaco.languages.registerCompletionItemProvider(
     LANGUAGE_ID,
     createCompletionProvider(collections, fields, monaco)
-  )
+  );
 }
 
 /** Register the hover provider for operator docs and field types */
@@ -148,10 +148,7 @@ export function registerHoverProvider(
   monaco: typeof monacoType,
   fields: SchemaField[]
 ): monacoType.IDisposable {
-  return monaco.languages.registerHoverProvider(
-    LANGUAGE_ID,
-    createHoverProvider(fields, monaco)
-  )
+  return monaco.languages.registerHoverProvider(LANGUAGE_ID, createHoverProvider(fields, monaco));
 }
 
 /** Set up diagnostics for a specific model */
@@ -159,7 +156,7 @@ export function setupDiagnostics(
   monaco: typeof monacoType,
   model: monacoType.editor.ITextModel
 ): { dispose: () => void } {
-  const provider = createDiagnosticsProvider(monaco)
-  provider.validate(model)
-  return { dispose: provider.dispose }
+  const provider = createDiagnosticsProvider(monaco);
+  provider.validate(model);
+  return { dispose: provider.dispose };
 }

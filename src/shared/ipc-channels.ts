@@ -30,4 +30,4 @@ export const IPC_CHANNELS = {
   HISTORY_CLEAR: 'history:clear',
   HISTORY_SEARCH: 'history:search',
   HISTORY_DELETE: 'history:delete'
-} as const
+} as const;

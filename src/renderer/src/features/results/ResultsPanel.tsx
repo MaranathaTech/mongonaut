@@ -1,153 +1,153 @@
-import { useCallback } from 'react'
-import { Loader2, X, Table, Braces, ChevronLeft, ChevronRight, Download } from 'lucide-react'
-import { useResultsStore } from '../../stores/results-store'
-import { useDocumentStore } from '../../stores/document-store'
-import TableView from './TableView'
-import JsonView from './JsonView'
-import DocumentEditorPanel from '../document-editor/DocumentEditorPanel'
-import ConfirmDeleteDialog from '../document-editor/ConfirmDeleteDialog'
+import { useCallback } from 'react';
+import { Loader2, X, Table, Braces, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useResultsStore } from '../../stores/results-store';
+import { useDocumentStore } from '../../stores/document-store';
+import TableView from './TableView';
+import JsonView from './JsonView';
+import DocumentEditorPanel from '../document-editor/DocumentEditorPanel';
+import ConfirmDeleteDialog from '../document-editor/ConfirmDeleteDialog';
 
 function flattenObject(obj: Record<string, unknown>, prefix = ''): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
+  const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key
+    const fullKey = prefix ? `${prefix}.${key}` : key;
     if (Array.isArray(value)) {
-      result[fullKey] = JSON.stringify(value)
+      result[fullKey] = JSON.stringify(value);
     } else if (value !== null && typeof value === 'object') {
       // Handle EJSON types
-      const v = value as Record<string, unknown>
+      const v = value as Record<string, unknown>;
       if ('$oid' in v) {
-        result[fullKey] = String(v.$oid)
+        result[fullKey] = String(v.$oid);
       } else if ('$date' in v) {
-        result[fullKey] = String(v.$date)
+        result[fullKey] = String(v.$date);
       } else if ('$numberLong' in v) {
-        result[fullKey] = String(v.$numberLong)
+        result[fullKey] = String(v.$numberLong);
       } else if ('$numberDecimal' in v) {
-        result[fullKey] = String(v.$numberDecimal)
+        result[fullKey] = String(v.$numberDecimal);
       } else {
-        Object.assign(result, flattenObject(v, fullKey))
+        Object.assign(result, flattenObject(v, fullKey));
       }
     } else {
-      result[fullKey] = value
+      result[fullKey] = value;
     }
   }
-  return result
+  return result;
 }
 
 function escapeCsvValue(value: unknown): string {
-  if (value === null || value === undefined) return ''
-  const str = String(value)
+  if (value === null || value === undefined) return '';
+  const str = String(value);
   if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-    return `"${str.replace(/"/g, '""')}"`
+    return `"${str.replace(/"/g, '""')}"`;
   }
-  return str
+  return str;
 }
 
 function exportJson(documents: Record<string, unknown>[]): void {
-  const json = JSON.stringify(documents, null, 2)
-  const blob = new Blob([json], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `export-${Date.now()}.json`
-  a.click()
-  URL.revokeObjectURL(url)
+  const json = JSON.stringify(documents, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `export-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function exportCsv(documents: Record<string, unknown>[]): void {
-  if (documents.length === 0) return
+  if (documents.length === 0) return;
 
   // Flatten all documents and collect headers
-  const flattened = documents.map((doc) => flattenObject(doc))
-  const headerSet = new Set<string>()
+  const flattened = documents.map((doc) => flattenObject(doc));
+  const headerSet = new Set<string>();
   for (const doc of flattened) {
     for (const key of Object.keys(doc)) {
-      headerSet.add(key)
+      headerSet.add(key);
     }
   }
-  const headers = Array.from(headerSet)
+  const headers = Array.from(headerSet);
 
-  const lines: string[] = []
-  lines.push(headers.map(escapeCsvValue).join(','))
+  const lines: string[] = [];
+  lines.push(headers.map(escapeCsvValue).join(','));
   for (const doc of flattened) {
-    const row = headers.map((h) => escapeCsvValue(doc[h]))
-    lines.push(row.join(','))
+    const row = headers.map((h) => escapeCsvValue(doc[h]));
+    lines.push(row.join(','));
   }
 
-  const csv = lines.join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `export-${Date.now()}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  const csv = lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `export-${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function ResultsPanel(): React.JSX.Element {
-  const results = useResultsStore((s) => s.results)
-  const explainResult = useResultsStore((s) => s.explainResult)
-  const isLoading = useResultsStore((s) => s.isLoading)
-  const error = useResultsStore((s) => s.error)
-  const viewMode = useResultsStore((s) => s.viewMode)
-  const page = useResultsStore((s) => s.page)
-  const pageSize = useResultsStore((s) => s.pageSize)
-  const lastQuery = useResultsStore((s) => s.lastQuery)
-  const setViewMode = useResultsStore((s) => s.setViewMode)
-  const goToPage = useResultsStore((s) => s.goToPage)
-  const changePageSize = useResultsStore((s) => s.changePageSize)
-  const clearError = useResultsStore((s) => s.clearError)
+  const results = useResultsStore((s) => s.results);
+  const explainResult = useResultsStore((s) => s.explainResult);
+  const isLoading = useResultsStore((s) => s.isLoading);
+  const error = useResultsStore((s) => s.error);
+  const viewMode = useResultsStore((s) => s.viewMode);
+  const page = useResultsStore((s) => s.page);
+  const pageSize = useResultsStore((s) => s.pageSize);
+  const lastQuery = useResultsStore((s) => s.lastQuery);
+  const setViewMode = useResultsStore((s) => s.setViewMode);
+  const goToPage = useResultsStore((s) => s.goToPage);
+  const changePageSize = useResultsStore((s) => s.changePageSize);
+  const clearError = useResultsStore((s) => s.clearError);
 
   // Document editor state for inline delete confirmation (triggered from table/json action buttons)
-  const confirmDialog = useDocumentStore((s) => s.confirmDialog)
-  const originalDocument = useDocumentStore((s) => s.originalDocument)
-  const isEditorOpen = useDocumentStore((s) => s.isOpen)
+  const confirmDialog = useDocumentStore((s) => s.confirmDialog);
+  const originalDocument = useDocumentStore((s) => s.originalDocument);
+  const isEditorOpen = useDocumentStore((s) => s.isOpen);
 
-  const executeQuery = useResultsStore((s) => s.executeQuery)
+  const executeQuery = useResultsStore((s) => s.executeQuery);
 
   const refreshResults = useCallback(() => {
     if (lastQuery) {
-      executeQuery(lastQuery.database, lastQuery.collection, lastQuery.queryText)
+      executeQuery(lastQuery.database, lastQuery.collection, lastQuery.queryText);
     }
-  }, [lastQuery, executeQuery])
+  }, [lastQuery, executeQuery]);
 
   const handleConfirmDelete = useCallback(async () => {
     if (confirmDialog) {
-      await confirmDialog.onConfirm()
-      refreshResults()
+      await confirmDialog.onConfirm();
+      refreshResults();
     }
-  }, [confirmDialog, refreshResults])
+  }, [confirmDialog, refreshResults]);
 
   const handleCancelDelete = useCallback(() => {
-    confirmDialog?.onCancel()
-  }, [confirmDialog])
+    confirmDialog?.onCancel();
+  }, [confirmDialog]);
 
-  const hasResults = results !== null || explainResult !== null
-  const totalCount = results?.totalCount ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
-  const executionTimeMs = results?.executionTimeMs ?? 0
+  const hasResults = results !== null || explainResult !== null;
+  const totalCount = results?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const executionTimeMs = results?.executionTimeMs ?? 0;
 
-  const startRow = hasResults ? (page - 1) * pageSize + 1 : 0
-  const endRow = hasResults ? Math.min(page * pageSize, totalCount) : 0
+  const startRow = hasResults ? (page - 1) * pageSize + 1 : 0;
+  const endRow = hasResults ? Math.min(page * pageSize, totalCount) : 0;
 
-  const database = lastQuery?.database ?? ''
-  const collection = lastQuery?.collection ?? ''
+  const database = lastQuery?.database ?? '';
+  const collection = lastQuery?.collection ?? '';
 
   const handlePageChange = useCallback(
     (newPage: number) => {
       if (newPage >= 1 && newPage <= totalPages) {
-        goToPage(newPage)
+        goToPage(newPage);
       }
     },
     [totalPages, goToPage]
-  )
+  );
 
   const handlePageSizeChange = useCallback(
     (newSize: number) => {
-      changePageSize(newSize)
+      changePageSize(newSize);
     },
     [changePageSize]
-  )
+  );
 
   // Empty state
   if (!hasResults && !isLoading && !error) {
@@ -155,7 +155,7 @@ export default function ResultsPanel(): React.JSX.Element {
       <div className="flex h-full items-center justify-center text-gray-400 dark:text-zinc-500">
         <p className="text-sm">Execute a query to see results</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -269,7 +269,10 @@ export default function ResultsPanel(): React.JSX.Element {
       {error && (
         <div className="flex items-start gap-2 border-b border-red-200 bg-red-50 px-3 py-2 dark:border-red-800/50 dark:bg-red-900/20">
           <span className="flex-1 text-xs text-red-600 dark:text-red-400">{error}</span>
-          <button className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" onClick={clearError}>
+          <button
+            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            onClick={clearError}
+          >
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -283,16 +286,19 @@ export default function ResultsPanel(): React.JSX.Element {
           </div>
         )}
 
-        {explainResult !== null && viewMode === 'json' && (
-          <JsonView data={explainResult} />
-        )}
+        {explainResult !== null && viewMode === 'json' && <JsonView data={explainResult} />}
 
         {results && viewMode === 'table' && (
           <TableView documents={results.documents} database={database} collection={collection} />
         )}
 
         {results && viewMode === 'json' && explainResult === null && (
-          <JsonView data={results.documents} isDocumentList database={database} collection={collection} />
+          <JsonView
+            data={results.documents}
+            isDocumentList
+            database={database}
+            collection={collection}
+          />
         )}
       </div>
 
@@ -309,5 +315,5 @@ export default function ResultsPanel(): React.JSX.Element {
         />
       )}
     </div>
-  )
+  );
 }

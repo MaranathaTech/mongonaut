@@ -1,19 +1,19 @@
-import { useState, useCallback } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
-import * as Tabs from '@radix-ui/react-tabs'
-import * as Switch from '@radix-ui/react-switch'
-import { X, Loader2, CheckCircle2, XCircle } from 'lucide-react'
-import type { ConnectionConfig } from '../../../../shared/types'
-import { useConnectionStore } from '../../stores/connection-store'
+import { useState, useCallback } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
+import * as Tabs from '@radix-ui/react-tabs';
+import * as Switch from '@radix-ui/react-switch';
+import { X, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import type { ConnectionConfig } from '../../../../shared/types';
+import { useConnectionStore } from '../../stores/connection-store';
 
 interface ConnectionDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  editConfig?: ConnectionConfig | null
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editConfig?: ConnectionConfig | null;
 }
 
 function generateId(): string {
-  return `conn_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+  return `conn_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 const defaultFormState = {
@@ -27,14 +27,14 @@ const defaultFormState = {
   password: '',
   authMechanism: 'None',
   tls: false
-}
+};
 
 export default function ConnectionDialog({
   open,
   onOpenChange,
   editConfig
 }: ConnectionDialogProps): React.JSX.Element {
-  const connect = useConnectionStore((s) => s.connect)
+  const connect = useConnectionStore((s) => s.connect);
 
   const [form, setForm] = useState(() =>
     editConfig
@@ -51,22 +51,22 @@ export default function ConnectionDialog({
           tls: editConfig.tls || false
         }
       : { ...defaultFormState }
-  )
+  );
 
   const [testStatus, setTestStatus] = useState<{
-    state: 'idle' | 'testing' | 'success' | 'error'
-    message?: string
-  }>({ state: 'idle' })
+    state: 'idle' | 'testing' | 'success' | 'error';
+    message?: string;
+  }>({ state: 'idle' });
 
-  const [connectError, setConnectError] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isConnecting, setIsConnecting] = useState(false)
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const resetForm = useCallback(() => {
-    setForm({ ...defaultFormState })
-    setTestStatus({ state: 'idle' })
-    setConnectError(null)
-  }, [])
+    setForm({ ...defaultFormState });
+    setTestStatus({ state: 'idle' });
+    setConnectError(null);
+  }, []);
 
   const buildConfig = useCallback((): ConnectionConfig => {
     return {
@@ -81,62 +81,62 @@ export default function ConnectionDialog({
       password: form.password || undefined,
       authMechanism: form.authMechanism !== 'None' ? form.authMechanism : undefined,
       tls: form.tls || undefined
-    }
-  }, [form, editConfig])
+    };
+  }, [form, editConfig]);
 
   const handleTest = useCallback(async () => {
-    setTestStatus({ state: 'testing' })
+    setTestStatus({ state: 'testing' });
     try {
-      const config = buildConfig()
-      const result = await window.api.testConnection(config)
+      const config = buildConfig();
+      const result = await window.api.testConnection(config);
       if (result.success) {
-        setTestStatus({ state: 'success', message: 'Connection successful' })
+        setTestStatus({ state: 'success', message: 'Connection successful' });
       } else {
-        setTestStatus({ state: 'error', message: result.error || 'Connection failed' })
+        setTestStatus({ state: 'error', message: result.error || 'Connection failed' });
       }
     } catch (err) {
       setTestStatus({
         state: 'error',
         message: err instanceof Error ? err.message : 'Connection test failed'
-      })
+      });
     }
-  }, [buildConfig])
+  }, [buildConfig]);
 
   const handleSave = useCallback(async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      const config = buildConfig()
-      await window.api.saveConnection(config)
-      onOpenChange(false)
-      resetForm()
+      const config = buildConfig();
+      await window.api.saveConnection(config);
+      onOpenChange(false);
+      resetForm();
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }, [buildConfig, onOpenChange, resetForm])
+  }, [buildConfig, onOpenChange, resetForm]);
 
   const handleConnect = useCallback(async () => {
-    setIsConnecting(true)
-    setConnectError(null)
+    setIsConnecting(true);
+    setConnectError(null);
     try {
-      const config = buildConfig()
-      await window.api.saveConnection(config)
-      const result = await window.api.connect(config)
+      const config = buildConfig();
+      await window.api.saveConnection(config);
+      const result = await window.api.connect(config);
       if (result.success) {
-        connect(config)
-        onOpenChange(false)
-        resetForm()
+        connect(config);
+        onOpenChange(false);
+        resetForm();
       } else {
-        setConnectError(result.error || 'Connection failed')
+        setConnectError(result.error || 'Connection failed');
       }
     } catch (err) {
-      setConnectError(err instanceof Error ? err.message : 'Connection failed')
+      setConnectError(err instanceof Error ? err.message : 'Connection failed');
     } finally {
-      setIsConnecting(false)
+      setIsConnecting(false);
     }
-  }, [buildConfig, connect, onOpenChange, resetForm])
+  }, [buildConfig, connect, onOpenChange, resetForm]);
 
   const inputClass =
-    'w-full rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500'
+    'w-full rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500';
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -155,7 +155,9 @@ export default function ConnectionDialog({
           <div className="px-5 py-4">
             {/* Connection name */}
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Connection Name</label>
+              <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                Connection Name
+              </label>
               <input
                 className={inputClass}
                 placeholder="My MongoDB Server"
@@ -184,7 +186,9 @@ export default function ConnectionDialog({
               </Tabs.List>
 
               <Tabs.Content value="uri">
-                <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Connection String</label>
+                <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                  Connection String
+                </label>
                 <input
                   className={inputClass}
                   placeholder="mongodb://localhost:27017"
@@ -197,7 +201,9 @@ export default function ConnectionDialog({
                 <div className="space-y-3">
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Host</label>
+                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                        Host
+                      </label>
                       <input
                         className={inputClass}
                         placeholder="localhost"
@@ -206,7 +212,9 @@ export default function ConnectionDialog({
                       />
                     </div>
                     <div className="w-24">
-                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Port</label>
+                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                        Port
+                      </label>
                       <input
                         className={inputClass}
                         type="number"
@@ -220,7 +228,9 @@ export default function ConnectionDialog({
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Database</label>
+                    <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                      Database
+                    </label>
                     <input
                       className={inputClass}
                       placeholder="(optional)"
@@ -231,7 +241,9 @@ export default function ConnectionDialog({
 
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Username</label>
+                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                        Username
+                      </label>
                       <input
                         className={inputClass}
                         placeholder="(optional)"
@@ -240,7 +252,9 @@ export default function ConnectionDialog({
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Password</label>
+                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                        Password
+                      </label>
                       <input
                         className={inputClass}
                         type="password"
@@ -253,13 +267,13 @@ export default function ConnectionDialog({
 
                   <div className="flex items-end gap-3">
                     <div className="flex-1">
-                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">Auth Mechanism</label>
+                      <label className="mb-1 block text-xs text-gray-500 dark:text-zinc-400">
+                        Auth Mechanism
+                      </label>
                       <select
                         className={inputClass}
                         value={form.authMechanism}
-                        onChange={(e) =>
-                          setForm((f) => ({ ...f, authMechanism: e.target.value }))
-                        }
+                        onChange={(e) => setForm((f) => ({ ...f, authMechanism: e.target.value }))}
                       >
                         <option value="None">None</option>
                         <option value="SCRAM-SHA-1">SCRAM-SHA-1</option>
@@ -293,9 +307,7 @@ export default function ConnectionDialog({
                       : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400'
                 }`}
               >
-                {testStatus.state === 'testing' && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                )}
+                {testStatus.state === 'testing' && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 {testStatus.state === 'success' && <CheckCircle2 className="h-3.5 w-3.5" />}
                 {testStatus.state === 'error' && <XCircle className="h-3.5 w-3.5" />}
                 <span>{testStatus.message || 'Testing connection...'}</span>
@@ -323,8 +335,8 @@ export default function ConnectionDialog({
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  onOpenChange(false)
-                  resetForm()
+                  onOpenChange(false);
+                  resetForm();
                 }}
                 className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
               >
@@ -349,5 +361,5 @@ export default function ConnectionDialog({
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 }

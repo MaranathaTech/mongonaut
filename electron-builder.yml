@@ -23,9 +23,10 @@ files:
   - "!src/**/*"
   - "!electron.vite.config.*"
   - "!{tsconfig*.json,vitest.config.*}"
-  - "!{.eslintrc*,.prettierrc*,.editorconfig}"
+  - "!{eslint.config.*,.prettierrc,.prettierignore,.editorconfig}"
   - "!{.env,.env.*}"
-  - "!{CLAUDE.md,README.md,todo.md}"
+  - "!{CONTRIBUTING.md,LICENSE,CLAUDE.md,README.md,todo.md}"
+  - "!.github/**/*"
 npmRebuild: false
 asar: true
 win:

@@ -1,8 +1,8 @@
-import { Plus } from 'lucide-react'
-import { useEditorStore } from '../stores/editor-store'
+import { Plus } from 'lucide-react';
+import { useEditorStore } from '../stores/editor-store';
 
 export default function TabBar(): React.JSX.Element {
-  const tabs = useEditorStore((s) => s.tabs)
+  const tabs = useEditorStore((s) => s.tabs);
 
   return (
     <div className="flex h-9 flex-shrink-0 items-center border-b border-zinc-700 bg-zinc-800/50">
@@ -27,5 +27,5 @@ export default function TabBar(): React.JSX.Element {
         <Plus className="h-3.5 w-3.5" />
       </button>
     </div>
-  )
+  );
 }

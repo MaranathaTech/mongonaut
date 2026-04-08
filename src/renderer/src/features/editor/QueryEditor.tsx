@@ -1,24 +1,24 @@
-import { useRef, useCallback, useEffect } from 'react'
-import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react'
-import type * as monacoType from 'monaco-editor/esm/vs/editor/editor.api'
+import { useRef, useCallback, useEffect } from 'react';
+import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
+import type * as monacoType from 'monaco-editor/esm/vs/editor/editor.api';
 import {
   registerMongoDBLanguage,
   registerCompletionProvider,
   registerHoverProvider,
   setupDiagnostics
-} from './monaco-mongodb/language'
-import { useBrowserStore } from '../../stores/browser-store'
-import { useSchemaStore } from '../../stores/schema-store'
-import { useThemeStore } from '../../stores/theme-store'
-import type { SchemaField } from '../../../../shared/types'
+} from './monaco-mongodb/language';
+import { useBrowserStore } from '../../stores/browser-store';
+import { useSchemaStore } from '../../stores/schema-store';
+import { useThemeStore } from '../../stores/theme-store';
+import type { SchemaField } from '../../../../shared/types';
 
 interface QueryEditorProps {
-  value: string
-  database: string
-  collection: string
-  onChange: (value: string) => void
-  onExecute: () => void
-  onFormat: () => void
+  value: string;
+  database: string;
+  collection: string;
+  onChange: (value: string) => void;
+  onExecute: () => void;
+  onFormat: () => void;
 }
 
 export default function QueryEditor({
@@ -29,45 +29,45 @@ export default function QueryEditor({
   onExecute,
   onFormat
 }: QueryEditorProps): React.JSX.Element {
-  const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(null)
-  const monacoRef = useRef<typeof monacoType | null>(null)
-  const completionDisposableRef = useRef<monacoType.IDisposable | null>(null)
-  const hoverDisposableRef = useRef<monacoType.IDisposable | null>(null)
-  const diagnosticsDisposableRef = useRef<{ dispose: () => void } | null>(null)
+  const editorRef = useRef<monacoType.editor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<typeof monacoType | null>(null);
+  const completionDisposableRef = useRef<monacoType.IDisposable | null>(null);
+  const hoverDisposableRef = useRef<monacoType.IDisposable | null>(null);
+  const diagnosticsDisposableRef = useRef<{ dispose: () => void } | null>(null);
 
-  const theme = useThemeStore((s) => s.theme)
-  const monacoTheme = theme === 'dark' ? 'mongodb-dark' : 'mongodb-light'
+  const theme = useThemeStore((s) => s.theme);
+  const monacoTheme = theme === 'dark' ? 'mongodb-dark' : 'mongodb-light';
 
   const collections = useBrowserStore((s) => {
-    const allCollections: string[] = []
+    const allCollections: string[] = [];
     for (const cols of Object.values(s.collections)) {
       for (const col of cols) {
-        allCollections.push(col.name)
+        allCollections.push(col.name);
       }
     }
-    return allCollections
-  })
+    return allCollections;
+  });
 
-  const schemaKey = `${database}.${collection}`
-  const fields: SchemaField[] = useSchemaStore((s) => s.schemas[schemaKey] ?? [])
+  const schemaKey = `${database}.${collection}`;
+  const fields: SchemaField[] = useSchemaStore((s) => s.schemas[schemaKey] ?? []);
 
   const handleBeforeMount: BeforeMount = useCallback((monaco) => {
-    registerMongoDBLanguage(monaco)
-  }, [])
+    registerMongoDBLanguage(monaco);
+  }, []);
 
   const handleMount: OnMount = useCallback(
     (editor, monaco) => {
-      editorRef.current = editor
-      monacoRef.current = monaco
+      editorRef.current = editor;
+      monacoRef.current = monaco;
 
       // Register completion + hover providers
-      completionDisposableRef.current = registerCompletionProvider(monaco, collections, fields)
-      hoverDisposableRef.current = registerHoverProvider(monaco, fields)
+      completionDisposableRef.current = registerCompletionProvider(monaco, collections, fields);
+      hoverDisposableRef.current = registerHoverProvider(monaco, fields);
 
       // Setup diagnostics for this model
-      const model = editor.getModel()
+      const model = editor.getModel();
       if (model) {
-        diagnosticsDisposableRef.current = setupDiagnostics(monaco, model)
+        diagnosticsDisposableRef.current = setupDiagnostics(monaco, model);
       }
 
       // Ctrl+Enter / Cmd+Enter → execute query
@@ -76,7 +76,7 @@ export default function QueryEditor({
         label: 'Execute Query',
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
         run: () => onExecute()
-      })
+      });
 
       // Ctrl+Shift+F / Cmd+Shift+F → format
       editor.addAction({
@@ -84,35 +84,35 @@ export default function QueryEditor({
         label: 'Format Query',
         keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyF],
         run: () => onFormat()
-      })
+      });
 
-      editor.focus()
+      editor.focus();
     },
     [collections, fields, onExecute, onFormat]
-  )
+  );
 
   // Update completion + hover providers when collections or fields change
   useEffect(() => {
     if (monacoRef.current) {
-      completionDisposableRef.current?.dispose()
-      hoverDisposableRef.current?.dispose()
+      completionDisposableRef.current?.dispose();
+      hoverDisposableRef.current?.dispose();
       completionDisposableRef.current = registerCompletionProvider(
         monacoRef.current,
         collections,
         fields
-      )
-      hoverDisposableRef.current = registerHoverProvider(monacoRef.current, fields)
+      );
+      hoverDisposableRef.current = registerHoverProvider(monacoRef.current, fields);
     }
-  }, [collections, fields])
+  }, [collections, fields]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      completionDisposableRef.current?.dispose()
-      hoverDisposableRef.current?.dispose()
-      diagnosticsDisposableRef.current?.dispose()
-    }
-  }, [])
+      completionDisposableRef.current?.dispose();
+      hoverDisposableRef.current?.dispose();
+      diagnosticsDisposableRef.current?.dispose();
+    };
+  }, []);
 
   return (
     <Editor
@@ -148,5 +148,5 @@ export default function QueryEditor({
         </div>
       }
     />
-  )
+  );
 }

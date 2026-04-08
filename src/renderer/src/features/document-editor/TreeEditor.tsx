@@ -1,166 +1,190 @@
-import { useState, useCallback } from 'react'
-import {
-  ChevronRight,
-  ChevronDown,
-  Plus,
-  X,
-  GripVertical
-} from 'lucide-react'
-import type { SerializedDocument } from '../../../../shared/types'
+import { useState, useCallback } from 'react';
+import { ChevronRight, ChevronDown, Plus, X, GripVertical } from 'lucide-react';
+import type { SerializedDocument } from '../../../../shared/types';
 
 interface TreeEditorProps {
-  document: SerializedDocument
-  onChange: (doc: SerializedDocument) => void
-  originalDocument?: SerializedDocument | null
+  document: SerializedDocument;
+  onChange: (doc: SerializedDocument) => void;
+  originalDocument?: SerializedDocument | null;
 }
 
-type FieldType = 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array'
+type FieldType = 'string' | 'number' | 'boolean' | 'null' | 'object' | 'array';
 
 function detectType(value: unknown): FieldType {
-  if (value === null) return 'null'
-  if (Array.isArray(value)) return 'array'
-  if (typeof value === 'object') return 'object'
-  if (typeof value === 'boolean') return 'boolean'
-  if (typeof value === 'number') return 'number'
-  return 'string'
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  if (typeof value === 'object') return 'object';
+  if (typeof value === 'boolean') return 'boolean';
+  if (typeof value === 'number') return 'number';
+  return 'string';
 }
 
 function getDefaultForType(type: FieldType): unknown {
   switch (type) {
-    case 'string': return ''
-    case 'number': return 0
-    case 'boolean': return false
-    case 'null': return null
-    case 'object': return {}
-    case 'array': return []
+    case 'string':
+      return '';
+    case 'number':
+      return 0;
+    case 'boolean':
+      return false;
+    case 'null':
+      return null;
+    case 'object':
+      return {};
+    case 'array':
+      return [];
   }
 }
 
 function typeBadgeColor(type: FieldType): string {
   switch (type) {
-    case 'string': return 'bg-orange-900/40 text-orange-400'
-    case 'number': return 'bg-green-900/40 text-green-400'
-    case 'boolean': return 'bg-blue-900/40 text-blue-400'
-    case 'null': return 'bg-gray-200/40 dark:bg-zinc-700/40 text-gray-500 dark:text-zinc-400'
-    case 'object': return 'bg-purple-900/40 text-purple-400'
-    case 'array': return 'bg-teal-900/40 text-teal-400'
+    case 'string':
+      return 'bg-orange-900/40 text-orange-400';
+    case 'number':
+      return 'bg-green-900/40 text-green-400';
+    case 'boolean':
+      return 'bg-blue-900/40 text-blue-400';
+    case 'null':
+      return 'bg-gray-200/40 dark:bg-zinc-700/40 text-gray-500 dark:text-zinc-400';
+    case 'object':
+      return 'bg-purple-900/40 text-purple-400';
+    case 'array':
+      return 'bg-teal-900/40 text-teal-400';
   }
 }
 
 function isBsonType(value: unknown): string | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
-  const obj = value as Record<string, unknown>
-  const keys = Object.keys(obj)
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj);
   if (keys.length === 1) {
-    if ('$oid' in obj) return 'ObjectId'
-    if ('$date' in obj) return 'Date'
-    if ('$numberLong' in obj) return 'Long'
-    if ('$numberDecimal' in obj) return 'Decimal'
+    if ('$oid' in obj) return 'ObjectId';
+    if ('$date' in obj) return 'Date';
+    if ('$numberLong' in obj) return 'Long';
+    if ('$numberDecimal' in obj) return 'Decimal';
   }
-  if ('$regex' in obj) return 'Regex'
-  return null
+  if ('$regex' in obj) return 'Regex';
+  return null;
 }
 
 function setAtPath(obj: unknown, pathParts: (string | number)[], value: unknown): unknown {
-  if (pathParts.length === 0) return value
+  if (pathParts.length === 0) return value;
 
-  const [head, ...rest] = pathParts
+  const [head, ...rest] = pathParts;
 
   if (Array.isArray(obj)) {
-    const arr = [...obj]
-    arr[head as number] = setAtPath(arr[head as number], rest, value)
-    return arr
+    const arr = [...obj];
+    arr[head as number] = setAtPath(arr[head as number], rest, value);
+    return arr;
   }
 
   if (typeof obj === 'object' && obj !== null) {
-    return { ...(obj as Record<string, unknown>), [head]: setAtPath((obj as Record<string, unknown>)[head as string], rest, value) }
+    return {
+      ...(obj as Record<string, unknown>),
+      [head]: setAtPath((obj as Record<string, unknown>)[head as string], rest, value)
+    };
   }
 
-  return obj
+  return obj;
 }
 
 function deleteAtPath(obj: unknown, pathParts: (string | number)[]): unknown {
-  if (pathParts.length === 0) return undefined
+  if (pathParts.length === 0) return undefined;
 
   if (pathParts.length === 1) {
     if (Array.isArray(obj)) {
-      const arr = [...obj]
-      arr.splice(pathParts[0] as number, 1)
-      return arr
+      const arr = [...obj];
+      arr.splice(pathParts[0] as number, 1);
+      return arr;
     }
     if (typeof obj === 'object' && obj !== null) {
-      const copy = { ...(obj as Record<string, unknown>) }
-      delete copy[pathParts[0] as string]
-      return copy
+      const copy = { ...(obj as Record<string, unknown>) };
+      delete copy[pathParts[0] as string];
+      return copy;
     }
-    return obj
+    return obj;
   }
 
-  const [head, ...rest] = pathParts
+  const [head, ...rest] = pathParts;
 
   if (Array.isArray(obj)) {
-    const arr = [...obj]
-    arr[head as number] = deleteAtPath(arr[head as number], rest)
-    return arr
+    const arr = [...obj];
+    arr[head as number] = deleteAtPath(arr[head as number], rest);
+    return arr;
   }
 
   if (typeof obj === 'object' && obj !== null) {
-    return { ...(obj as Record<string, unknown>), [head]: deleteAtPath((obj as Record<string, unknown>)[head as string], rest) }
+    return {
+      ...(obj as Record<string, unknown>),
+      [head]: deleteAtPath((obj as Record<string, unknown>)[head as string], rest)
+    };
   }
 
-  return obj
+  return obj;
 }
 
-function addFieldAtPath(obj: unknown, pathParts: (string | number)[], key: string, value: unknown): unknown {
+function addFieldAtPath(
+  obj: unknown,
+  pathParts: (string | number)[],
+  key: string,
+  value: unknown
+): unknown {
   if (pathParts.length === 0) {
     if (Array.isArray(obj)) {
-      return [...obj, value]
+      return [...obj, value];
     }
     if (typeof obj === 'object' && obj !== null) {
-      return { ...(obj as Record<string, unknown>), [key]: value }
+      return { ...(obj as Record<string, unknown>), [key]: value };
     }
-    return obj
+    return obj;
   }
 
-  const [head, ...rest] = pathParts
+  const [head, ...rest] = pathParts;
 
   if (Array.isArray(obj)) {
-    const arr = [...obj]
-    arr[head as number] = addFieldAtPath(arr[head as number], rest, key, value)
-    return arr
+    const arr = [...obj];
+    arr[head as number] = addFieldAtPath(arr[head as number], rest, key, value);
+    return arr;
   }
 
   if (typeof obj === 'object' && obj !== null) {
-    return { ...(obj as Record<string, unknown>), [head]: addFieldAtPath((obj as Record<string, unknown>)[head as string], rest, key, value) }
+    return {
+      ...(obj as Record<string, unknown>),
+      [head]: addFieldAtPath((obj as Record<string, unknown>)[head as string], rest, key, value)
+    };
   }
 
-  return obj
+  return obj;
 }
 
-export default function TreeEditor({ document, onChange, originalDocument }: TreeEditorProps): React.JSX.Element {
+export default function TreeEditor({
+  document,
+  onChange,
+  originalDocument
+}: TreeEditorProps): React.JSX.Element {
   const handleUpdate = useCallback(
     (path: (string | number)[], value: unknown) => {
-      const updated = setAtPath(document, path, value) as SerializedDocument
-      onChange(updated)
+      const updated = setAtPath(document, path, value) as SerializedDocument;
+      onChange(updated);
     },
     [document, onChange]
-  )
+  );
 
   const handleDelete = useCallback(
     (path: (string | number)[]) => {
-      const updated = deleteAtPath(document, path) as SerializedDocument
-      onChange(updated)
+      const updated = deleteAtPath(document, path) as SerializedDocument;
+      onChange(updated);
     },
     [document, onChange]
-  )
+  );
 
   const handleAddField = useCallback(
     (parentPath: (string | number)[], key: string, value: unknown) => {
-      const updated = addFieldAtPath(document, parentPath, key, value) as SerializedDocument
-      onChange(updated)
+      const updated = addFieldAtPath(document, parentPath, key, value) as SerializedDocument;
+      onChange(updated);
     },
     [document, onChange]
-  )
+  );
 
   return (
     <div className="h-full overflow-auto p-3 font-mono text-sm">
@@ -174,39 +198,51 @@ export default function TreeEditor({ document, onChange, originalDocument }: Tre
         originalObj={originalDocument ?? undefined}
       />
     </div>
-  )
+  );
 }
 
 interface ObjectFieldsProps {
-  obj: Record<string, unknown>
-  path: (string | number)[]
-  depth: number
-  onUpdate: (path: (string | number)[], value: unknown) => void
-  onDelete: (path: (string | number)[]) => void
-  onAddField: (parentPath: (string | number)[], key: string, value: unknown) => void
-  originalObj?: Record<string, unknown>
+  obj: Record<string, unknown>;
+  path: (string | number)[];
+  depth: number;
+  onUpdate: (path: (string | number)[], value: unknown) => void;
+  onDelete: (path: (string | number)[]) => void;
+  onAddField: (parentPath: (string | number)[], key: string, value: unknown) => void;
+  originalObj?: Record<string, unknown>;
 }
 
-function ObjectFields({ obj, path, depth, onUpdate, onDelete, onAddField, originalObj }: ObjectFieldsProps): React.JSX.Element {
-  const [addingField, setAddingField] = useState(false)
-  const [newFieldName, setNewFieldName] = useState('')
+function ObjectFields({
+  obj,
+  path,
+  depth,
+  onUpdate,
+  onDelete,
+  onAddField,
+  originalObj
+}: ObjectFieldsProps): React.JSX.Element {
+  const [addingField, setAddingField] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
 
   const handleAddField = (): void => {
-    if (!newFieldName.trim()) return
-    if (newFieldName in obj) return
-    onAddField(path, newFieldName.trim(), '')
-    setNewFieldName('')
-    setAddingField(false)
-  }
+    if (!newFieldName.trim()) return;
+    if (newFieldName in obj) return;
+    onAddField(path, newFieldName.trim(), '');
+    setNewFieldName('');
+    setAddingField(false);
+  };
 
   return (
     <div>
       {Object.entries(obj).map(([key, value]) => {
-        const isIdField = key === '_id' && path.length === 0
-        const fieldPath = [...path, key]
-        const origValue = originalObj?.[key]
-        const isChanged = originalObj !== undefined && key in (originalObj as Record<string, unknown>) && JSON.stringify(origValue) !== JSON.stringify(value)
-        const isNew = originalObj !== undefined && !(key in (originalObj as Record<string, unknown>))
+        const isIdField = key === '_id' && path.length === 0;
+        const fieldPath = [...path, key];
+        const origValue = originalObj?.[key];
+        const isChanged =
+          originalObj !== undefined &&
+          key in (originalObj as Record<string, unknown>) &&
+          JSON.stringify(origValue) !== JSON.stringify(value);
+        const isNew =
+          originalObj !== undefined && !(key in (originalObj as Record<string, unknown>));
 
         return (
           <FieldNode
@@ -222,7 +258,7 @@ function ObjectFields({ obj, path, depth, onUpdate, onDelete, onAddField, origin
             onDelete={onDelete}
             onAddField={onAddField}
           />
-        )
+        );
       })}
 
       {/* Add field button */}
@@ -235,10 +271,10 @@ function ObjectFields({ obj, path, depth, onUpdate, onDelete, onAddField, origin
               value={newFieldName}
               onChange={(e) => setNewFieldName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddField()
+                if (e.key === 'Enter') handleAddField();
                 if (e.key === 'Escape') {
-                  setAddingField(false)
-                  setNewFieldName('')
+                  setAddingField(false);
+                  setNewFieldName('');
                 }
               }}
               autoFocus
@@ -252,8 +288,8 @@ function ObjectFields({ obj, path, depth, onUpdate, onDelete, onAddField, origin
             <button
               className="rounded px-1.5 py-0.5 text-xs text-gray-500 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700"
               onClick={() => {
-                setAddingField(false)
-                setNewFieldName('')
+                setAddingField(false);
+                setNewFieldName('');
               }}
             >
               Cancel
@@ -270,20 +306,20 @@ function ObjectFields({ obj, path, depth, onUpdate, onDelete, onAddField, origin
         )}
       </div>
     </div>
-  )
+  );
 }
 
 interface FieldNodeProps {
-  fieldKey: string
-  value: unknown
-  path: (string | number)[]
-  depth: number
-  readOnly?: boolean
-  isChanged?: boolean
-  isNew?: boolean
-  onUpdate: (path: (string | number)[], value: unknown) => void
-  onDelete: (path: (string | number)[]) => void
-  onAddField: (parentPath: (string | number)[], key: string, value: unknown) => void
+  fieldKey: string;
+  value: unknown;
+  path: (string | number)[];
+  depth: number;
+  readOnly?: boolean;
+  isChanged?: boolean;
+  isNew?: boolean;
+  onUpdate: (path: (string | number)[], value: unknown) => void;
+  onDelete: (path: (string | number)[]) => void;
+  onAddField: (parentPath: (string | number)[], key: string, value: unknown) => void;
 }
 
 function FieldNode({
@@ -298,16 +334,16 @@ function FieldNode({
   onDelete,
   onAddField
 }: FieldNodeProps): React.JSX.Element {
-  const [expanded, setExpanded] = useState(depth < 2)
-  const type = detectType(value)
-  const bsonType = isBsonType(value)
-  const isExpandable = type === 'object' || type === 'array'
+  const [expanded, setExpanded] = useState(depth < 2);
+  const type = detectType(value);
+  const bsonType = isBsonType(value);
+  const isExpandable = type === 'object' || type === 'array';
 
   const changeIndicator = isNew
     ? 'border-l-2 border-green-500'
     : isChanged
       ? 'border-l-2 border-yellow-500'
-      : ''
+      : '';
 
   return (
     <div className={`${changeIndicator}`} style={{ paddingLeft: depth > 0 ? 20 : 0 }}>
@@ -332,7 +368,9 @@ function FieldNode({
         <span className="text-sky-300 shrink-0">{fieldKey}</span>
 
         {/* Type badge */}
-        <span className={`rounded px-1 py-0 text-[10px] leading-4 shrink-0 ${typeBadgeColor(bsonType ? 'string' : type)}`}>
+        <span
+          className={`rounded px-1 py-0 text-[10px] leading-4 shrink-0 ${typeBadgeColor(bsonType ? 'string' : type)}`}
+        >
           {bsonType || type}
         </span>
 
@@ -403,19 +441,26 @@ function FieldNode({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 interface ArrayItemsProps {
-  arr: unknown[]
-  path: (string | number)[]
-  depth: number
-  onUpdate: (path: (string | number)[], value: unknown) => void
-  onDelete: (path: (string | number)[]) => void
-  onAddField: (parentPath: (string | number)[], key: string, value: unknown) => void
+  arr: unknown[];
+  path: (string | number)[];
+  depth: number;
+  onUpdate: (path: (string | number)[], value: unknown) => void;
+  onDelete: (path: (string | number)[]) => void;
+  onAddField: (parentPath: (string | number)[], key: string, value: unknown) => void;
 }
 
-function ArrayItems({ arr, path, depth, onUpdate, onDelete, onAddField }: ArrayItemsProps): React.JSX.Element {
+function ArrayItems({
+  arr,
+  path,
+  depth,
+  onUpdate,
+  onDelete,
+  onAddField
+}: ArrayItemsProps): React.JSX.Element {
   return (
     <div>
       {arr.map((item, i) => (
@@ -440,30 +485,34 @@ function ArrayItems({ arr, path, depth, onUpdate, onDelete, onAddField }: ArrayI
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 interface ValueEditorProps {
-  value: unknown
-  type: FieldType
-  bsonType: string | null
-  readOnly?: boolean
-  onChange: (value: unknown) => void
+  value: unknown;
+  type: FieldType;
+  bsonType: string | null;
+  readOnly?: boolean;
+  onChange: (value: unknown) => void;
 }
 
-function ValueEditor({ value, type, bsonType, readOnly, onChange }: ValueEditorProps): React.JSX.Element {
+function ValueEditor({
+  value,
+  type,
+  bsonType,
+  readOnly,
+  onChange
+}: ValueEditorProps): React.JSX.Element {
   // BSON types shown as read-only text
   if (bsonType) {
-    const display = formatBsonDisplay(value as Record<string, unknown>, bsonType)
-    return (
-      <span className="text-xs text-teal-400">{display}</span>
-    )
+    const display = formatBsonDisplay(value as Record<string, unknown>, bsonType);
+    return <span className="text-xs text-teal-400">{display}</span>;
   }
 
   if (readOnly) {
     return (
       <span className="text-xs text-gray-700 dark:text-zinc-300">{formatPrimitive(value)}</span>
-    )
+    );
   }
 
   switch (type) {
@@ -474,7 +523,7 @@ function ValueEditor({ value, type, bsonType, readOnly, onChange }: ValueEditorP
           value={value as string}
           onChange={(e) => onChange(e.target.value)}
         />
-      )
+      );
     case 'number':
       return (
         <input
@@ -482,11 +531,11 @@ function ValueEditor({ value, type, bsonType, readOnly, onChange }: ValueEditorP
           type="number"
           value={value as number}
           onChange={(e) => {
-            const num = parseFloat(e.target.value)
-            onChange(isNaN(num) ? 0 : num)
+            const num = parseFloat(e.target.value);
+            onChange(isNaN(num) ? 0 : num);
           }}
         />
-      )
+      );
     case 'boolean':
       return (
         <button
@@ -497,38 +546,44 @@ function ValueEditor({ value, type, bsonType, readOnly, onChange }: ValueEditorP
         >
           {String(value)}
         </button>
-      )
+      );
     case 'null':
-      return <span className="text-xs text-gray-400 dark:text-zinc-500">null</span>
+      return <span className="text-xs text-gray-400 dark:text-zinc-500">null</span>;
     default:
-      return <span className="text-xs text-gray-700 dark:text-zinc-300">{String(value)}</span>
+      return <span className="text-xs text-gray-700 dark:text-zinc-300">{String(value)}</span>;
   }
 }
 
 function formatBsonDisplay(obj: Record<string, unknown>, bsonType: string): string {
   switch (bsonType) {
-    case 'ObjectId': return `ObjectId("${obj.$oid}")`
-    case 'Date': return `ISODate("${obj.$date}")`
-    case 'Long': return `NumberLong(${obj.$numberLong})`
-    case 'Decimal': return `NumberDecimal("${obj.$numberDecimal}")`
-    case 'Regex': return `/${obj.$regex}/${obj.$options || ''}`
-    default: return JSON.stringify(obj)
+    case 'ObjectId':
+      return `ObjectId("${obj.$oid}")`;
+    case 'Date':
+      return `ISODate("${obj.$date}")`;
+    case 'Long':
+      return `NumberLong(${obj.$numberLong})`;
+    case 'Decimal':
+      return `NumberDecimal("${obj.$numberDecimal}")`;
+    case 'Regex':
+      return `/${obj.$regex}/${obj.$options || ''}`;
+    default:
+      return JSON.stringify(obj);
   }
 }
 
 function formatPrimitive(value: unknown): string {
-  if (value === null) return 'null'
-  if (typeof value === 'string') return `"${value}"`
-  return String(value)
+  if (value === null) return 'null';
+  if (typeof value === 'string') return `"${value}"`;
+  return String(value);
 }
 
 interface TypeChangerProps {
-  currentType: FieldType
-  onChange: (type: FieldType) => void
+  currentType: FieldType;
+  onChange: (type: FieldType) => void;
 }
 
 function TypeChanger({ currentType, onChange }: TypeChangerProps): React.JSX.Element {
-  const types: FieldType[] = ['string', 'number', 'boolean', 'null', 'object', 'array']
+  const types: FieldType[] = ['string', 'number', 'boolean', 'null', 'object', 'array'];
 
   return (
     <select
@@ -542,5 +597,5 @@ function TypeChanger({ currentType, onChange }: TypeChangerProps): React.JSX.Ele
         </option>
       ))}
     </select>
-  )
+  );
 }

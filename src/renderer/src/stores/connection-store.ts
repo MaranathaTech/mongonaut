@@ -1,20 +1,20 @@
-import { create } from 'zustand'
-import type { ConnectionConfig, DatabaseInfo } from '../../../shared/types'
+import { create } from 'zustand';
+import type { ConnectionConfig, DatabaseInfo } from '../../../shared/types';
 
 interface ConnectionState {
-  isConnected: boolean
-  connectionConfig: ConnectionConfig | null
-  databases: DatabaseInfo[]
-  savedConnections: ConnectionConfig[]
-  error: string | null
+  isConnected: boolean;
+  connectionConfig: ConnectionConfig | null;
+  databases: DatabaseInfo[];
+  savedConnections: ConnectionConfig[];
+  error: string | null;
 
-  connect: (config: ConnectionConfig) => void
-  disconnect: () => Promise<void>
-  setDatabases: (databases: DatabaseInfo[]) => void
-  setError: (error: string | null) => void
-  loadSavedConnections: () => Promise<void>
-  saveConnection: (config: ConnectionConfig) => Promise<void>
-  deleteConnection: (id: string) => Promise<void>
+  connect: (config: ConnectionConfig) => void;
+  disconnect: () => Promise<void>;
+  setDatabases: (databases: DatabaseInfo[]) => void;
+  setError: (error: string | null) => void;
+  loadSavedConnections: () => Promise<void>;
+  saveConnection: (config: ConnectionConfig) => Promise<void>;
+  deleteConnection: (id: string) => Promise<void>;
 }
 
 export const useConnectionStore = create<ConnectionState>((set) => ({
@@ -27,27 +27,27 @@ export const useConnectionStore = create<ConnectionState>((set) => ({
   connect: (config) => set({ isConnected: true, connectionConfig: config, error: null }),
 
   disconnect: async () => {
-    await window.api.disconnect()
-    set({ isConnected: false, connectionConfig: null, databases: [], error: null })
+    await window.api.disconnect();
+    set({ isConnected: false, connectionConfig: null, databases: [], error: null });
   },
 
   setDatabases: (databases) => set({ databases }),
   setError: (error) => set({ error }),
 
   loadSavedConnections: async () => {
-    const connections = await window.api.listConnections()
-    set({ savedConnections: connections })
+    const connections = await window.api.listConnections();
+    set({ savedConnections: connections });
   },
 
   saveConnection: async (config) => {
-    await window.api.saveConnection(config)
-    const connections = await window.api.listConnections()
-    set({ savedConnections: connections })
+    await window.api.saveConnection(config);
+    const connections = await window.api.listConnections();
+    set({ savedConnections: connections });
   },
 
   deleteConnection: async (id) => {
-    await window.api.deleteConnection(id)
-    const connections = await window.api.listConnections()
-    set({ savedConnections: connections })
+    await window.api.deleteConnection(id);
+    const connections = await window.api.listConnections();
+    set({ savedConnections: connections });
   }
-}))
+}));

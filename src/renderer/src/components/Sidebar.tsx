@@ -1,117 +1,117 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { Database, Unplug } from 'lucide-react'
-import { useConnectionStore } from '../stores/connection-store'
-import ConnectionList from '../features/connection/ConnectionList'
-import ConnectionDialog from '../features/connection/ConnectionDialog'
-import DatabaseTree from '../features/browser/DatabaseTree'
-import HistoryPanel from '../features/history/HistoryPanel'
-import type { ConnectionConfig } from '../../../shared/types'
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Database, Unplug } from 'lucide-react';
+import { useConnectionStore } from '../stores/connection-store';
+import ConnectionList from '../features/connection/ConnectionList';
+import ConnectionDialog from '../features/connection/ConnectionDialog';
+import DatabaseTree from '../features/browser/DatabaseTree';
+import HistoryPanel from '../features/history/HistoryPanel';
+import type { ConnectionConfig } from '../../../shared/types';
 
-const MIN_HISTORY_HEIGHT = 32
-const MAX_HISTORY_PERCENT = 70
+const MIN_HISTORY_HEIGHT = 32;
+const MAX_HISTORY_PERCENT = 70;
 
 interface SidebarProps {
-  connectionDialogTrigger?: number
+  connectionDialogTrigger?: number;
 }
 
 export default function Sidebar({ connectionDialogTrigger }: SidebarProps): React.JSX.Element {
-  const isConnected = useConnectionStore((s) => s.isConnected)
-  const connectionConfig = useConnectionStore((s) => s.connectionConfig)
-  const savedConnections = useConnectionStore((s) => s.savedConnections)
-  const loadSavedConnections = useConnectionStore((s) => s.loadSavedConnections)
-  const deleteConnection = useConnectionStore((s) => s.deleteConnection)
-  const disconnect = useConnectionStore((s) => s.disconnect)
+  const isConnected = useConnectionStore((s) => s.isConnected);
+  const connectionConfig = useConnectionStore((s) => s.connectionConfig);
+  const savedConnections = useConnectionStore((s) => s.savedConnections);
+  const loadSavedConnections = useConnectionStore((s) => s.loadSavedConnections);
+  const deleteConnection = useConnectionStore((s) => s.deleteConnection);
+  const disconnect = useConnectionStore((s) => s.disconnect);
 
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editConfig, setEditConfig] = useState<ConnectionConfig | null>(null)
-  const [historyExpanded, setHistoryExpanded] = useState(false)
-  const [historyHeight, setHistoryHeight] = useState(200)
-  const [isResizing, setIsResizing] = useState(false)
-  const sidebarRef = useRef<HTMLDivElement>(null)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editConfig, setEditConfig] = useState<ConnectionConfig | null>(null);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [historyHeight, setHistoryHeight] = useState(200);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadSavedConnections().then(() => {
       // Auto-open dialog is handled after connections load
-    })
-  }, [loadSavedConnections])
+    });
+  }, [loadSavedConnections]);
 
   // Auto-open dialog if no saved connections on initial load
-  const [initialLoadDone, setInitialLoadDone] = useState(false)
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   useEffect(() => {
     if (!initialLoadDone && savedConnections !== undefined) {
-      setInitialLoadDone(true)
+      setInitialLoadDone(true);
       if (savedConnections.length === 0) {
-        setDialogOpen(true)
+        setDialogOpen(true);
       }
     }
-  }, [savedConnections, initialLoadDone])
+  }, [savedConnections, initialLoadDone]);
 
   // Open dialog when triggered by keyboard shortcut (Ctrl+L)
   useEffect(() => {
     if (connectionDialogTrigger && connectionDialogTrigger > 0) {
-      setEditConfig(null)
-      setDialogOpen(true)
+      setEditConfig(null);
+      setDialogOpen(true);
     }
-  }, [connectionDialogTrigger])
+  }, [connectionDialogTrigger]);
 
   const handleNewConnection = (): void => {
-    setEditConfig(null)
-    setDialogOpen(true)
-  }
+    setEditConfig(null);
+    setDialogOpen(true);
+  };
 
   const handleEditConnection = (config: ConnectionConfig): void => {
-    setEditConfig(config)
-    setDialogOpen(true)
-  }
+    setEditConfig(config);
+    setDialogOpen(true);
+  };
 
   const handleDeleteConnection = async (id: string): Promise<void> => {
-    await deleteConnection(id)
-  }
+    await deleteConnection(id);
+  };
 
   const handleDialogOpenChange = (open: boolean): void => {
-    setDialogOpen(open)
+    setDialogOpen(open);
     if (!open) {
-      setEditConfig(null)
-      loadSavedConnections()
+      setEditConfig(null);
+      loadSavedConnections();
     }
-  }
+  };
 
   const handleResizeMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (!historyExpanded) return
-      e.preventDefault()
-      setIsResizing(true)
+      if (!historyExpanded) return;
+      e.preventDefault();
+      setIsResizing(true);
     },
     [historyExpanded]
-  )
+  );
 
   useEffect(() => {
-    if (!isResizing) return
+    if (!isResizing) return;
 
     const handleMouseMove = (e: MouseEvent): void => {
-      if (!sidebarRef.current) return
-      const rect = sidebarRef.current.getBoundingClientRect()
-      const newHeight = rect.bottom - e.clientY
-      const maxHeight = rect.height * (MAX_HISTORY_PERCENT / 100)
-      setHistoryHeight(Math.min(maxHeight, Math.max(MIN_HISTORY_HEIGHT, newHeight)))
-    }
+      if (!sidebarRef.current) return;
+      const rect = sidebarRef.current.getBoundingClientRect();
+      const newHeight = rect.bottom - e.clientY;
+      const maxHeight = rect.height * (MAX_HISTORY_PERCENT / 100);
+      setHistoryHeight(Math.min(maxHeight, Math.max(MIN_HISTORY_HEIGHT, newHeight)));
+    };
 
     const handleMouseUp = (): void => {
-      setIsResizing(false)
-    }
+      setIsResizing(false);
+    };
 
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-    document.body.style.cursor = 'row-resize'
-    document.body.style.userSelect = 'none'
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      document.body.style.cursor = ''
-      document.body.style.userSelect = ''
-    }
-  }, [isResizing])
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   return (
     <div ref={sidebarRef} className="flex h-full flex-col">
@@ -181,5 +181,5 @@ export default function Sidebar({ connectionDialogTrigger }: SidebarProps): Reac
         editConfig={editConfig}
       />
     </div>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-import { useRef, useCallback, useState } from 'react'
-import Editor, { type OnMount } from '@monaco-editor/react'
-import type { SerializedDocument } from '../../../../shared/types'
+import { useRef, useCallback, useState } from 'react';
+import Editor, { type OnMount } from '@monaco-editor/react';
+import type { SerializedDocument } from '../../../../shared/types';
 
 interface JsonDocumentEditorProps {
-  document: SerializedDocument
-  onChange: (doc: SerializedDocument) => void
-  onReset: () => void
+  document: SerializedDocument;
+  onChange: (doc: SerializedDocument) => void;
+  onReset: () => void;
 }
 
 export default function JsonDocumentEditor({
@@ -13,44 +13,44 @@ export default function JsonDocumentEditor({
   onChange,
   onReset
 }: JsonDocumentEditorProps): React.JSX.Element {
-  const editorRef = useRef<Parameters<OnMount>[0] | null>(null)
-  const [parseError, setParseError] = useState<string | null>(null)
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
 
-  const initialValue = JSON.stringify(document, null, 2)
+  const initialValue = JSON.stringify(document, null, 2);
 
   const handleMount: OnMount = useCallback((editor) => {
-    editorRef.current = editor
-  }, [])
+    editorRef.current = editor;
+  }, []);
 
   const handleChange = useCallback(
     (value: string | undefined) => {
-      if (!value) return
+      if (!value) return;
       try {
-        const parsed = JSON.parse(value)
-        setParseError(null)
-        onChange(parsed)
+        const parsed = JSON.parse(value);
+        setParseError(null);
+        onChange(parsed);
       } catch (err) {
-        setParseError(err instanceof Error ? err.message : 'Invalid JSON')
+        setParseError(err instanceof Error ? err.message : 'Invalid JSON');
       }
     },
     [onChange]
-  )
+  );
 
   const handleFormat = useCallback(() => {
     if (editorRef.current) {
-      editorRef.current.getAction('editor.action.formatDocument')?.run()
+      editorRef.current.getAction('editor.action.formatDocument')?.run();
     }
-  }, [])
+  }, []);
 
   const handleResetEditor = useCallback(() => {
     if (editorRef.current) {
-      const model = editorRef.current.getModel()
+      const model = editorRef.current.getModel();
       if (model) {
         // onReset will update the document prop, which triggers re-render
-        onReset()
+        onReset();
       }
     }
-  }, [onReset])
+  }, [onReset]);
 
   return (
     <div className="flex h-full flex-col">
@@ -68,9 +68,7 @@ export default function JsonDocumentEditor({
         >
           Reset
         </button>
-        {parseError && (
-          <span className="ml-2 text-xs text-red-400">{parseError}</span>
-        )}
+        {parseError && <span className="ml-2 text-xs text-red-400">{parseError}</span>}
       </div>
 
       {/* Editor */}
@@ -94,5 +92,5 @@ export default function JsonDocumentEditor({
         />
       </div>
     </div>
-  )
+  );
 }

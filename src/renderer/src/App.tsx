@@ -1,15 +1,15 @@
-import { useState, useMemo } from 'react'
-import ErrorBoundary from './components/ErrorBoundary'
-import AppShell from './components/AppShell'
-import KeyboardShortcutsDialog from './components/KeyboardShortcutsDialog'
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useState, useMemo } from 'react';
+import ErrorBoundary from './components/ErrorBoundary';
+import AppShell from './components/AppShell';
+import KeyboardShortcutsDialog from './components/KeyboardShortcutsDialog';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 // Import theme store to apply initial theme class on <html>
-import './stores/theme-store'
+import './stores/theme-store';
 
 function AppInner(): React.JSX.Element {
-  const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const [connectionDialogRequested, setConnectionDialogRequested] = useState(0)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [connectionDialogRequested, setConnectionDialogRequested] = useState(0);
 
   const shortcutActions = useMemo(
     () => ({
@@ -17,16 +17,16 @@ function AppInner(): React.JSX.Element {
       onOpenConnectionDialog: () => setConnectionDialogRequested((n) => n + 1)
     }),
     []
-  )
+  );
 
-  useKeyboardShortcuts(shortcutActions)
+  useKeyboardShortcuts(shortcutActions);
 
   return (
     <>
       <AppShell connectionDialogTrigger={connectionDialogRequested} />
       <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </>
-  )
+  );
 }
 
 function App(): React.JSX.Element {
@@ -34,7 +34,7 @@ function App(): React.JSX.Element {
     <ErrorBoundary fallbackLabel="Application">
       <AppInner />
     </ErrorBoundary>
-  )
+  );
 }
 
-export default App
+export default App;

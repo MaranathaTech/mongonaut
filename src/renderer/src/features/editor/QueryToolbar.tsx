@@ -1,18 +1,18 @@
-import { Play, Info, Code2, RefreshCw } from 'lucide-react'
+import { Play, Info, Code2, RefreshCw } from 'lucide-react';
 
 interface QueryToolbarProps {
-  database: string
-  collection: string
-  limit: number
-  onLimitChange: (limit: number) => void
-  onExecute: () => void
-  onExplain: () => void
-  onFormat: () => void
-  onRefreshSchema: () => void
-  schemaIsLoading: boolean
+  database: string;
+  collection: string;
+  limit: number;
+  onLimitChange: (limit: number) => void;
+  onExecute: () => void;
+  onExplain: () => void;
+  onFormat: () => void;
+  onRefreshSchema: () => void;
+  schemaIsLoading: boolean;
 }
 
-const LIMIT_OPTIONS = [10, 25, 50, 100, 500]
+const LIMIT_OPTIONS = [10, 25, 50, 100, 500];
 
 export default function QueryToolbar({
   database,
@@ -92,5 +92,5 @@ export default function QueryToolbar({
         </select>
       </div>
     </div>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import * as ContextMenu from '@radix-ui/react-context-menu'
-import { RefreshCw, Table2, BarChart3 } from 'lucide-react'
+import * as ContextMenu from '@radix-ui/react-context-menu';
+import { RefreshCw, Table2, BarChart3 } from 'lucide-react';
 
 interface DatabaseContextMenuProps {
-  children: React.ReactNode
-  onRefreshCollections: () => void
+  children: React.ReactNode;
+  onRefreshCollections: () => void;
 }
 
 export function DatabaseContextMenu({
@@ -25,14 +25,14 @@ export function DatabaseContextMenu({
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>
-  )
+  );
 }
 
 interface CollectionContextMenuProps {
-  children: React.ReactNode
-  onOpenQueryTab: () => void
-  onViewStats: () => void
-  onRefresh: () => void
+  children: React.ReactNode;
+  onOpenQueryTab: () => void;
+  onViewStats: () => void;
+  onRefresh: () => void;
 }
 
 export function CollectionContextMenu({
@@ -71,5 +71,5 @@ export function CollectionContextMenu({
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>
-  )
+  );
 }
