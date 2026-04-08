@@ -46,6 +46,6 @@ const api = {
   deleteHistoryEntry: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_DELETE, id)
 }
 
-export type MongoViewerAPI = typeof api
+export type MongonautAPI = typeof api
 
 contextBridge.exposeInMainWorld('api', api)

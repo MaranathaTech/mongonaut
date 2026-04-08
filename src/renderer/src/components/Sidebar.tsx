@@ -119,7 +119,7 @@ export default function Sidebar({ connectionDialogTrigger }: SidebarProps): Reac
       <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2 dark:border-zinc-700">
         <div className="flex items-center gap-2">
           <Database className="h-4 w-4 text-blue-400" />
-          <span className="text-sm font-medium">MongoViewer</span>
+          <span className="text-sm font-medium">Mongonaut</span>
         </div>
         {isConnected && (
           <button

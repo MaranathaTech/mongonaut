@@ -1,4 +1,4 @@
-# MongoViewer
+# Mongonaut
 
 A lightweight MongoDB viewer built with Electron, React, and TypeScript. An alternative to Studio 3T for browsing and querying MongoDB databases.
 
@@ -26,8 +26,13 @@ npm run dev
 ## Build
 
 ```bash
-npm run build
+npm run build          # Production build (electron-vite)
+npm run build:linux    # Package for Linux (AppImage + deb)
+npm run build:mac      # Package for macOS (DMG)
+npm run build:win      # Package for Windows (NSIS installer)
 ```
+
+Packaged installers are output to `dist/`.
 
 ## Test
 

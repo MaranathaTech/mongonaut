@@ -1,0 +1,56 @@
+appId: com.mongonaut
+productName: Mongonaut
+directories:
+  buildResources: resources
+  output: dist
+files:
+  - out/**/*
+  - "!out/**/*.map"
+  # Externalized runtime deps (mongodb driver + transitive deps)
+  - node_modules/mongodb/**/*
+  - node_modules/bson/**/*
+  - node_modules/@mongodb-js/saslprep/**/*
+  - node_modules/mongodb-connection-string-url/**/*
+  - node_modules/whatwg-url/**/*
+  - node_modules/tr46/**/*
+  - node_modules/webidl-conversions/**/*
+  - node_modules/sparse-bitfield/**/*
+  - node_modules/memory-pager/**/*
+  - node_modules/punycode/**/*
+  # Exclude non-runtime files
+  - "!**/{CHANGELOG.md,README.md,readme.md,test,tests,__tests__,*.test.js}"
+  - "!**/node_modules/*/{.git,.github}"
+  - "!src/**/*"
+  - "!electron.vite.config.*"
+  - "!{tsconfig*.json,vitest.config.*}"
+  - "!{.eslintrc*,.prettierrc*,.editorconfig}"
+  - "!{.env,.env.*}"
+  - "!{CLAUDE.md,README.md,todo.md}"
+npmRebuild: false
+asar: true
+win:
+  executableName: Mongonaut
+  target:
+    - nsis
+nsis:
+  artifactName: ${name}-${version}-setup.${ext}
+  shortcutName: Mongonaut
+  uninstallDisplayName: Mongonaut
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+dmg:
+  artifactName: ${name}-${version}.${ext}
+linux:
+  target:
+    - AppImage
+    - deb
+  maintainer: mongonaut
+  category: Development
+appImage:
+  artifactName: ${name}-${version}.${ext}
+deb:
+  artifactName: ${name}-${version}.${ext}

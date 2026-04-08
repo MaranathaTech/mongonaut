@@ -9,8 +9,8 @@ const MIN_SIDEBAR_WIDTH = 200
 const MAX_SIDEBAR_WIDTH = 600
 const MIN_EDITOR_HEIGHT = 100
 
-const STORAGE_KEY_SIDEBAR = 'mongo-viewer-sidebar-width'
-const STORAGE_KEY_EDITOR = 'mongo-viewer-editor-height'
+const STORAGE_KEY_SIDEBAR = 'mongonaut-sidebar-width'
+const STORAGE_KEY_EDITOR = 'mongonaut-editor-height'
 
 function loadNumber(key: string, fallback: number): number {
   try {

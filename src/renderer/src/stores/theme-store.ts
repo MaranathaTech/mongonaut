@@ -10,7 +10,7 @@ interface ThemeState {
 
 function getStoredTheme(): Theme {
   try {
-    const stored = localStorage.getItem('mongo-viewer-theme')
+    const stored = localStorage.getItem('mongonaut-theme')
     if (stored === 'light' || stored === 'dark') return stored
   } catch {
     // localStorage may not be available
@@ -28,7 +28,7 @@ function applyTheme(theme: Theme): void {
     root.classList.remove('dark')
   }
   root.style.colorScheme = theme
-  localStorage.setItem('mongo-viewer-theme', theme)
+  localStorage.setItem('mongonaut-theme', theme)
 }
 
 // Apply initial theme immediately

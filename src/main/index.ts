@@ -72,7 +72,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.mongo-viewer')
+  electronApp.setAppUserModelId('com.mongonaut')
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)

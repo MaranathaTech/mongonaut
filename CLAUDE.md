@@ -1,4 +1,4 @@
-# MongoViewer — Claude Code Guide
+# Mongonaut — Claude Code Guide
 
 ## Tech Stack
 - **Electron + electron-vite** for desktop app (main/preload/renderer architecture)
@@ -104,6 +104,9 @@ tests/
 ## Commands
 - `npm run dev` — Start dev server with HMR
 - `npm run build` — Production build
+- `npm run build:win` — Build + package for Windows (NSIS installer)
+- `npm run build:mac` — Build + package for macOS (DMG)
+- `npm run build:linux` — Build + package for Linux (AppImage + deb)
 - `npm run typecheck` — Run TypeScript type checking
 - `npm run test` — Run unit tests (Vitest)
 - `npm run test:watch` — Run tests in watch mode
