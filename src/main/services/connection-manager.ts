@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
-import type { ConnectionConfig } from '../../shared/types';
+import type { FullConnectionConfig } from '../../shared/types';
 
-function buildUri(config: ConnectionConfig): string {
+function buildUri(config: FullConnectionConfig): string {
   if (config.mode === 'uri' && config.uri) {
     return config.uri;
   }
@@ -32,9 +32,9 @@ function buildUri(config: ConnectionConfig): string {
 
 class ConnectionManager {
   private client: MongoClient | null = null;
-  private config: ConnectionConfig | null = null;
+  private config: FullConnectionConfig | null = null;
 
-  async connect(config: ConnectionConfig): Promise<void> {
+  async connect(config: FullConnectionConfig): Promise<void> {
     if (this.client) {
       await this.disconnect();
     }
@@ -58,7 +58,7 @@ class ConnectionManager {
   }
 
   async testConnection(
-    config: ConnectionConfig
+    config: FullConnectionConfig
   ): Promise<{ success: boolean; error?: string; serverInfo?: unknown }> {
     let tempClient: MongoClient | null = null;
     try {
@@ -88,7 +88,7 @@ class ConnectionManager {
     return this.client;
   }
 
-  getConfig(): ConnectionConfig | null {
+  getConfig(): FullConnectionConfig | null {
     return this.config;
   }
 

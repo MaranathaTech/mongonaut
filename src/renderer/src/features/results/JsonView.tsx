@@ -90,7 +90,12 @@ function DocumentItem({
         const serializedId = JSON.stringify(idVal);
         const result = (await window.api.deleteDocument(database, collection, serializedId)) as {
           success: boolean;
+          cancelled?: boolean;
         };
+        if (result.cancelled) {
+          useDocumentStore.getState().setConfirmDialog(null);
+          return;
+        }
         if (result.success) {
           useDocumentStore.getState().setConfirmDialog(null);
           useDocumentStore.setState({

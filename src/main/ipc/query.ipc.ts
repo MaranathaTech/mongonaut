@@ -1,12 +1,15 @@
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../shared/ipc-channels';
 import { queryExecutor } from '../services/query-executor';
+import { assertDbName, assertCollectionName } from '../lib/validators';
 import { addHistoryEntry } from './history.ipc';
 import type { QueryRequest, QueryResult } from '../../shared/types';
 
 export function registerQueryHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.QUERY_EXECUTE, async (_event, request: QueryRequest) => {
     try {
+      assertDbName(request.database);
+      assertCollectionName(request.collection);
       const result = await queryExecutor.execute(request);
 
       // Auto-save successful queries to history
@@ -31,6 +34,8 @@ export function registerQueryHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.QUERY_EXPLAIN, async (_event, request: QueryRequest) => {
     try {
+      assertDbName(request.database);
+      assertCollectionName(request.collection);
       return await queryExecutor.explain(request);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

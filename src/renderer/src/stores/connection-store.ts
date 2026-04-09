@@ -1,19 +1,19 @@
 import { create } from 'zustand';
-import type { ConnectionConfig, DatabaseInfo } from '../../../shared/types';
+import type { StoredConnectionConfig, FullConnectionConfig, DatabaseInfo } from '../../../shared/types';
 
 interface ConnectionState {
   isConnected: boolean;
-  connectionConfig: ConnectionConfig | null;
+  connectionConfig: StoredConnectionConfig | null;
   databases: DatabaseInfo[];
-  savedConnections: ConnectionConfig[];
+  savedConnections: StoredConnectionConfig[];
   error: string | null;
 
-  connect: (config: ConnectionConfig) => void;
+  connect: (config: StoredConnectionConfig) => void;
   disconnect: () => Promise<void>;
   setDatabases: (databases: DatabaseInfo[]) => void;
   setError: (error: string | null) => void;
   loadSavedConnections: () => Promise<void>;
-  saveConnection: (config: ConnectionConfig) => Promise<void>;
+  saveConnection: (config: FullConnectionConfig) => Promise<void>;
   deleteConnection: (id: string) => Promise<void>;
 }
 

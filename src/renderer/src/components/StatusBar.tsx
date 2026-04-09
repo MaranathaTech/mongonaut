@@ -13,13 +13,8 @@ export default function StatusBar(): React.JSX.Element {
 
   const connectionLabel = (): string => {
     if (!isConnected || !config) return 'Disconnected';
-    if (config.mode === 'uri' && config.uri) {
-      try {
-        const url = new URL(config.uri);
-        return `Connected to ${url.host}`;
-      } catch {
-        return 'Connected';
-      }
+    if (config.mode === 'uri') {
+      return config.host ? `Connected to ${config.host}` : 'Connected';
     }
     return `Connected to ${config.host || 'localhost'}:${config.port || 27017}`;
   };

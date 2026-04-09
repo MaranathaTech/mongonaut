@@ -1,17 +1,25 @@
-export interface ConnectionConfig {
+/** Shape stored on disk and sent to renderer. Never contains secrets. */
+export interface StoredConnectionConfig {
   id: string;
   name: string;
   mode: 'uri' | 'form';
-  uri?: string;
   host?: string;
   port?: number;
   database?: string;
   username?: string;
-  password?: string;
   authMechanism?: string;
   tls?: boolean;
   lastUsed?: number;
 }
+
+/** Full shape used in main process when actually connecting. */
+export interface FullConnectionConfig extends StoredConnectionConfig {
+  password?: string;
+  uri?: string;
+}
+
+/** @deprecated Use StoredConnectionConfig (renderer) or FullConnectionConfig (main). */
+export type ConnectionConfig = FullConnectionConfig;
 
 export interface QueryRequest {
   database: string;

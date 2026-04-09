@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Plus, Trash2, Plug, Server } from 'lucide-react';
-import type { ConnectionConfig } from '../../../../shared/types';
+import type { StoredConnectionConfig } from '../../../../shared/types';
 import { useConnectionStore } from '../../stores/connection-store';
 
 interface ConnectionListProps {
-  connections: ConnectionConfig[];
+  connections: StoredConnectionConfig[];
   onNewConnection: () => void;
-  onEditConnection: (config: ConnectionConfig) => void;
+  onEditConnection: (config: StoredConnectionConfig) => void;
   onDeleteConnection: (id: string) => void;
 }
 
@@ -20,7 +20,7 @@ export default function ConnectionList({
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleConnect = async (config: ConnectionConfig): Promise<void> => {
+  const handleConnect = async (config: StoredConnectionConfig): Promise<void> => {
     setConnectingId(config.id);
     setError(null);
     try {
@@ -37,14 +37,9 @@ export default function ConnectionList({
     }
   };
 
-  const displayHost = (config: ConnectionConfig): string => {
-    if (config.mode === 'uri' && config.uri) {
-      try {
-        const url = new URL(config.uri);
-        return url.host;
-      } catch {
-        return config.uri.slice(0, 40);
-      }
+  const displayHost = (config: StoredConnectionConfig): string => {
+    if (config.mode === 'uri') {
+      return config.host || 'URI connection';
     }
     return `${config.host || 'localhost'}:${config.port || 27017}`;
   };

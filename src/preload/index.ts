@@ -1,15 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
-import type { ConnectionConfig, QueryRequest } from '../shared/types';
+import type { FullConnectionConfig, QueryRequest } from '../shared/types';
 
 const api = {
   // Connection
-  connect: (config: ConnectionConfig) =>
+  connect: (config: FullConnectionConfig) =>
     ipcRenderer.invoke(IPC_CHANNELS.CONNECTION_CONNECT, config),
   disconnect: () => ipcRenderer.invoke(IPC_CHANNELS.CONNECTION_DISCONNECT),
-  testConnection: (config: ConnectionConfig) =>
+  testConnection: (config: FullConnectionConfig) =>
     ipcRenderer.invoke(IPC_CHANNELS.CONNECTION_TEST, config),
-  saveConnection: (config: ConnectionConfig) =>
+  saveConnection: (config: FullConnectionConfig) =>
     ipcRenderer.invoke(IPC_CHANNELS.CONNECTION_SAVE, config),
   listConnections: () => ipcRenderer.invoke(IPC_CHANNELS.CONNECTION_LIST),
   deleteConnection: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.CONNECTION_DELETE, id),

@@ -87,5 +87,29 @@ describe('Safe BSON', () => {
       const deserialized = deserializeDocument(serialized);
       expect(deserialized).toEqual(original);
     });
+
+    it('should throw when serialized document exceeds 32 MB limit', () => {
+      const oversized = { data: 'a'.repeat(33 * 1024 * 1024) };
+      expect(() => deserializeDocument(oversized)).toThrow(/limit/);
+    });
+
+    it('should throw when nested object exceeds 32 MB limit after serialization', () => {
+      // Build a nested structure whose JSON serialization exceeds 32 MB
+      const largeChunk = 'x'.repeat(8 * 1024 * 1024);
+      const oversized = {
+        a: largeChunk,
+        b: largeChunk,
+        c: largeChunk,
+        d: largeChunk,
+        e: largeChunk
+      };
+      expect(() => deserializeDocument(oversized)).toThrow(/limit/);
+    });
+
+    it('should accept a document under the 32 MB limit', () => {
+      const doc = { data: 'a'.repeat(1000) };
+      const result = deserializeDocument(doc);
+      expect(result).toEqual(doc);
+    });
   });
 });

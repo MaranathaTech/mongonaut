@@ -3,13 +3,13 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as Tabs from '@radix-ui/react-tabs';
 import * as Switch from '@radix-ui/react-switch';
 import { X, Loader2, CheckCircle2, XCircle } from 'lucide-react';
-import type { ConnectionConfig } from '../../../../shared/types';
+import type { StoredConnectionConfig, FullConnectionConfig } from '../../../../shared/types';
 import { useConnectionStore } from '../../stores/connection-store';
 
 interface ConnectionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editConfig?: ConnectionConfig | null;
+  editConfig?: StoredConnectionConfig | null;
 }
 
 function generateId(): string {
@@ -41,12 +41,12 @@ export default function ConnectionDialog({
       ? {
           name: editConfig.name,
           mode: editConfig.mode,
-          uri: editConfig.uri || '',
+          uri: '',
           host: editConfig.host || 'localhost',
           port: editConfig.port || 27017,
           database: editConfig.database || '',
           username: editConfig.username || '',
-          password: editConfig.password || '',
+          password: '',
           authMechanism: editConfig.authMechanism || 'None',
           tls: editConfig.tls || false
         }
@@ -68,7 +68,7 @@ export default function ConnectionDialog({
     setConnectError(null);
   }, []);
 
-  const buildConfig = useCallback((): ConnectionConfig => {
+  const buildConfig = useCallback((): FullConnectionConfig => {
     return {
       id: editConfig?.id || generateId(),
       name: form.name || (form.mode === 'uri' ? 'New Connection' : `${form.host}:${form.port}`),
@@ -122,7 +122,18 @@ export default function ConnectionDialog({
       await window.api.saveConnection(config);
       const result = await window.api.connect(config);
       if (result.success) {
-        connect(config);
+        // Store only the secret-free shape in renderer state
+        connect({
+          id: config.id,
+          name: config.name,
+          mode: config.mode,
+          host: config.host,
+          port: config.port,
+          database: config.database,
+          username: config.username,
+          authMechanism: config.authMechanism,
+          tls: config.tls
+        });
         onOpenChange(false);
         resetForm();
       } else {

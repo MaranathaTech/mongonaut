@@ -213,7 +213,10 @@ export const useDocumentStore = create<DocumentEditorState>((set, get) => ({
       serializedId,
       editedDocument
     );
-    const res = result as { success: boolean; error?: string };
+    const res = result as { success: boolean; cancelled?: boolean; error?: string };
+    if (res.cancelled) {
+      return { success: false };
+    }
     return res;
   },
 
@@ -227,7 +230,10 @@ export const useDocumentStore = create<DocumentEditorState>((set, get) => ({
     const serializedId = JSON.stringify(idValue);
 
     const result = await window.api.deleteDocument(database, collection, serializedId);
-    const res = result as { success: boolean; error?: string };
+    const res = result as { success: boolean; cancelled?: boolean; error?: string };
+    if (res.cancelled) {
+      return { success: false };
+    }
     return res;
   },
 

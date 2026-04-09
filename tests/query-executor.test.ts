@@ -1,12 +1,4 @@
 import { describe, it, expect } from 'vitest';
-
-// We test the query parsing logic directly by importing the QueryExecutor class
-// and calling its public safeParseJSON + testing the parse behavior.
-// Since QueryExecutor is a class with private parseQuery, we test through safeParseJSON
-// and exercise parseQuery via a test-friendly approach.
-
-// Import the module - since it's a class we can test the parsing methods
-// We need to mock the connectionManager since it's imported at module level
 import { vi } from 'vitest';
 
 vi.mock('../src/main/services/connection-manager', () => ({
@@ -15,8 +7,14 @@ vi.mock('../src/main/services/connection-manager', () => ({
   }
 }));
 
-// Now import the query executor
-const { queryExecutor } = await import('../src/main/services/query-executor');
+const {
+  queryExecutor,
+  findMatchingParen,
+  sanitizeFilter
+} = await import('../src/main/services/query-executor');
+
+// Helper to access private parseQuery for testing
+const parseQuery = (text: string) => (queryExecutor as any).parseQuery(text);
 
 describe('QueryExecutor - safeParseJSON', () => {
   it('should parse simple JSON object', () => {
@@ -113,5 +111,150 @@ describe('QueryExecutor - safeParseJSON', () => {
   it('should parse empty array', () => {
     const result = queryExecutor.safeParseJSON('[]');
     expect(result).toEqual([]);
+  });
+});
+
+describe('findMatchingParen', () => {
+  it('should find matching paren in simple case', () => {
+    expect(findMatchingParen('(abc)', 0)).toBe(4);
+  });
+
+  it('should handle nested parens', () => {
+    expect(findMatchingParen('(a(b)c)', 0)).toBe(6);
+  });
+
+  it('should handle parens inside strings', () => {
+    expect(findMatchingParen('("a)")', 0)).toBe(5);
+  });
+
+  it('should throw on unbalanced parens', () => {
+    expect(() => findMatchingParen('(abc', 0)).toThrow('Unbalanced parentheses');
+  });
+
+  it('should throw when not starting at opening paren', () => {
+    expect(() => findMatchingParen('abc', 0)).toThrow('Expected opening paren');
+  });
+});
+
+describe('QueryExecutor - parser correctness', () => {
+  it('should parse find with sort, limit chain', () => {
+    const result = parseQuery('db.col.find({a:1}).sort({b:-1}).limit(10)');
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({ a: 1 });
+    expect(result.sort).toEqual({ b: -1 });
+    expect(result.limit).toBe(10);
+  });
+
+  it('should parse chain args with nested parens', () => {
+    const result = parseQuery(
+      'db.col.find({a: {$gt: 1}}).sort({nested: {$meta: "textScore"}})'
+    );
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({ a: { $gt: 1 } });
+    expect(result.sort).toEqual({ nested: { $meta: 'textScore' } });
+  });
+
+  it('should parse regex literal with double-quote inside', () => {
+    const result = queryExecutor.safeParseJSON('{name: /foo"bar/}');
+    expect(result).toEqual({ name: { $regex: 'foo"bar', $options: '' } });
+  });
+
+  it('should NOT rewrite forward slashes inside string literals as regex', () => {
+    const result = queryExecutor.safeParseJSON('{url: "https://example.com/path"}');
+    expect(result).toEqual({ url: 'https://example.com/path' });
+  });
+
+  it('should parse find with skip and project chain', () => {
+    const result = parseQuery('db.col.find({}).skip(20).limit(10).project({name: 1})');
+    expect(result.method).toBe('find');
+    expect(result.skip).toBe(20);
+    expect(result.limit).toBe(10);
+    expect(result.projection).toEqual({ name: 1 });
+  });
+
+  it('should parse implicit find', () => {
+    const result = parseQuery('{status: "active"}');
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({ status: 'active' });
+  });
+
+  it('should parse implicit aggregate', () => {
+    const result = parseQuery('[{$match: {status: "active"}}]');
+    expect(result.method).toBe('aggregate');
+    expect(result.pipeline).toEqual([{ $match: { status: 'active' } }]);
+  });
+});
+
+describe('sanitizeFilter', () => {
+  it('should reject $where operator', () => {
+    expect(() => sanitizeFilter({ $where: 'this.a == 1' })).toThrow(
+      'Operator "$where" is not allowed'
+    );
+  });
+
+  it('should reject $function operator', () => {
+    expect(() =>
+      sanitizeFilter({ $function: { body: 'function() {}', args: [], lang: 'js' } })
+    ).toThrow('Operator "$function" is not allowed');
+  });
+
+  it('should reject $accumulator operator', () => {
+    expect(() =>
+      sanitizeFilter({ $accumulator: { init: 'function() {}', accumulate: 'function() {}' } })
+    ).toThrow('Operator "$accumulator" is not allowed');
+  });
+
+  it('should accept $expr with safe operators', () => {
+    expect(() => sanitizeFilter({ $expr: { $eq: ['$a', '$b'] } })).not.toThrow();
+  });
+
+  it('should reject forbidden operator nested inside $expr', () => {
+    expect(() =>
+      sanitizeFilter({
+        $expr: { $function: { body: 'function() {}', args: [], lang: 'js' } }
+      })
+    ).toThrow('Operator "$function" is not allowed');
+  });
+
+  it('should reject $where in aggregate pipeline stage', () => {
+    const pipeline = [{ $match: { $where: 'this.a > 1' } }];
+    expect(() => {
+      for (const stage of pipeline) sanitizeFilter(stage);
+    }).toThrow('Operator "$where" is not allowed');
+  });
+
+  it('should accept normal filter objects', () => {
+    expect(() => sanitizeFilter({ name: 'test', age: { $gt: 18 } })).not.toThrow();
+  });
+
+  it('should accept null and primitives', () => {
+    expect(() => sanitizeFilter(null)).not.toThrow();
+    expect(() => sanitizeFilter(42)).not.toThrow();
+    expect(() => sanitizeFilter('hello')).not.toThrow();
+  });
+});
+
+describe('QueryExecutor - error message sanitization', () => {
+  it('should not include "Processed" in parse error messages', () => {
+    try {
+      queryExecutor.safeParseJSON('not valid json at all');
+      expect.fail('Expected an error to be thrown');
+    } catch (err) {
+      const message = (err as Error).message;
+      expect(message).not.toContain('Processed');
+      expect(message).not.toContain('not valid json');
+      expect(message).toMatch(/^Failed to parse query/);
+    }
+  });
+
+  it('should not leak rewritten text in error messages', () => {
+    try {
+      queryExecutor.safeParseJSON('{broken: value without quotes}');
+      expect.fail('Expected an error to be thrown');
+    } catch (err) {
+      const message = (err as Error).message;
+      expect(message).not.toContain('Processed text');
+      expect(message).toMatch(/^Failed to parse query/);
+    }
   });
 });

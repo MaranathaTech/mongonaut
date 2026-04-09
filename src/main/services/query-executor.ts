@@ -3,6 +3,58 @@ import { connectionManager } from './connection-manager';
 import { serializeDocuments, serializeDocument } from '../lib/safe-bson';
 import type { QueryRequest, QueryResult } from '../../shared/types';
 
+/**
+ * Given a string and the index of an opening paren `(`, returns the index of
+ * the matching closing paren `)`. Respects string literals (single + double
+ * quoted, with backslash escapes). Throws if unbalanced.
+ */
+export function findMatchingParen(text: string, openIdx: number): number {
+  if (text[openIdx] !== '(') throw new Error('Expected opening paren');
+  let depth = 0;
+  let i = openIdx;
+  let inString: '"' | "'" | null = null;
+  let escaped = false;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === '\\') {
+        escaped = true;
+      } else if (ch === inString) {
+        inString = null;
+      }
+    } else {
+      if (ch === '"' || ch === "'") {
+        inString = ch;
+      } else if (ch === '(') {
+        depth++;
+      } else if (ch === ')') {
+        depth--;
+        if (depth === 0) return i;
+      }
+    }
+    i++;
+  }
+  throw new Error('Unbalanced parentheses in query');
+}
+
+const FORBIDDEN_OPERATORS = new Set(['$where', '$function', '$accumulator']);
+
+export function sanitizeFilter(value: unknown, path: string = ''): void {
+  if (value === null || typeof value !== 'object') return;
+  if (Array.isArray(value)) {
+    value.forEach((v, i) => sanitizeFilter(v, `${path}[${i}]`));
+    return;
+  }
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (FORBIDDEN_OPERATORS.has(k)) {
+      throw new Error(`Operator "${k}" is not allowed`);
+    }
+    sanitizeFilter(v, path ? `${path}.${k}` : k);
+  }
+}
+
 interface ParsedQuery {
   method: string;
   filter?: Record<string, unknown>;
@@ -23,6 +75,12 @@ class QueryExecutor {
     const coll = client.db(database).collection(collection);
 
     const parsed = this.parseQuery(queryText);
+
+    // Reject dangerous operators before executing
+    if (parsed.filter) sanitizeFilter(parsed.filter);
+    if (parsed.pipeline) {
+      for (const stage of parsed.pipeline) sanitizeFilter(stage);
+    }
 
     let documents: unknown[];
     let totalCount: number;
@@ -78,6 +136,12 @@ class QueryExecutor {
     const coll = client.db(request.database).collection(request.collection);
     const parsed = this.parseQuery(request.queryText);
 
+    // Reject dangerous operators before executing
+    if (parsed.filter) sanitizeFilter(parsed.filter);
+    if (parsed.pipeline) {
+      for (const stage of parsed.pipeline) sanitizeFilter(stage);
+    }
+
     let result: unknown;
     if (parsed.method === 'find') {
       result = await coll.find(parsed.filter || {}).explain('executionStats');
@@ -93,13 +157,14 @@ class QueryExecutor {
   private parseQuery(queryText: string): ParsedQuery {
     const text = queryText.trim();
 
-    // Try db.collection.method(...) pattern
-    // Match: db.<anything>.method( ... ) with optional chained calls
-    const dbMethodMatch = text.match(/^db\.\w+\.(\w+)\s*\(([\s\S]*)\)\s*(.*)$/s);
-    if (dbMethodMatch) {
-      const method = dbMethodMatch[1];
-      const argsStr = dbMethodMatch[2];
-      const chainStr = dbMethodMatch[3];
+    // Try db.collection.method(...) pattern using depth-aware paren walker
+    const prefixMatch = text.match(/^db\.\w+\.(\w+)\s*\(/);
+    if (prefixMatch) {
+      const method = prefixMatch[1];
+      const openIdx = prefixMatch[0].length - 1;
+      const closeIdx = findMatchingParen(text, openIdx);
+      const argsStr = text.slice(openIdx + 1, closeIdx).trim();
+      const chainStr = text.slice(closeIdx + 1).trim();
       return this.parseMethodCall(method, argsStr, chainStr);
     }
 
@@ -163,12 +228,26 @@ class QueryExecutor {
       result.projection = this.safeParseJSON(parts[1].trim()) as Record<string, unknown>;
     }
 
-    // Parse chained methods: .sort({}).limit(N).skip(N).project({})
+    // Parse chained methods using depth-aware paren walker
     if (chainStr) {
-      const chainMethods = chainStr.matchAll(/\.(\w+)\(([^)]*)\)/g);
-      for (const match of chainMethods) {
-        const chainMethod = match[1];
-        const chainArg = match[2].trim();
+      let pos = 0;
+      while (pos < chainStr.length) {
+        while (pos < chainStr.length && /\s/.test(chainStr[pos])) pos++;
+        if (pos >= chainStr.length) break;
+        if (chainStr[pos] !== '.') {
+          throw new Error('Invalid query: expected "." between chained methods');
+        }
+        pos++;
+        const nameMatch = chainStr.slice(pos).match(/^(\w+)\s*\(/);
+        if (!nameMatch) {
+          throw new Error('Invalid query: expected method name after "."');
+        }
+        const chainMethod = nameMatch[1];
+        const openIdx = pos + nameMatch[0].length - 1;
+        const closeIdx = findMatchingParen(chainStr, openIdx);
+        const chainArg = chainStr.slice(openIdx + 1, closeIdx).trim();
+        pos = closeIdx + 1;
+
         if (chainMethod === 'sort' && chainArg) {
           result.sort = this.safeParseJSON(chainArg) as Sort;
         } else if (chainMethod === 'limit' && chainArg) {
@@ -269,10 +348,10 @@ class QueryExecutor {
       /\bTimestamp\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)/g,
       '{"$timestamp": {"t": $1, "i": $2}}'
     );
-    // Simple regex: /pattern/flags → {"$regex": "pattern", "$options": "flags"}
-    processed = processed.replace(/\/([^/\n]+)\/([gimsuvy]*)/g, (_match, pattern, flags) => {
-      return `{"$regex": "${pattern}", "$options": "${flags}"}`;
-    });
+    // String-aware regex-literal rewrite: /pattern/flags → {"$regex": ..., "$options": ...}
+    // Only treat `/` as a regex literal when outside a string and preceded by `:`, `,`, `[`, or `(`
+    // (ignoring whitespace). Uses JSON.stringify for safe escaping.
+    processed = this.rewriteRegexLiterals(processed);
 
     // Step 2: Replace single quotes with double quotes
     // Must be careful not to replace single quotes inside double-quoted strings
@@ -289,10 +368,120 @@ class QueryExecutor {
     try {
       return JSON.parse(processed);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.debug('[query-executor] parse failure', { original: text, processed, err });
+      const posMatch = msg.match(/at position (\d+)/);
       throw new Error(
-        `Failed to parse query: ${err instanceof Error ? err.message : String(err)}\nProcessed text: ${processed}`
+        posMatch ? `Failed to parse query at position ${posMatch[1]}` : 'Failed to parse query'
       );
     }
+  }
+
+  /**
+   * Walk text character-by-character, rewriting `/pattern/flags` regex literals
+   * only when outside string literals. A `/` is treated as a regex start only
+   * when the last non-whitespace character is one of `:`, `,`, `[`, `(`.
+   */
+  private rewriteRegexLiterals(text: string): string {
+    const chars: string[] = [];
+    let i = 0;
+
+    while (i < text.length) {
+      // Skip double-quoted strings
+      if (text[i] === '"') {
+        chars.push('"');
+        i++;
+        while (i < text.length) {
+          if (text[i] === '\\' && i + 1 < text.length) {
+            chars.push(text[i], text[i + 1]);
+            i += 2;
+            continue;
+          }
+          if (text[i] === '"') {
+            chars.push('"');
+            i++;
+            break;
+          }
+          chars.push(text[i]);
+          i++;
+        }
+        continue;
+      }
+
+      // Skip single-quoted strings
+      if (text[i] === "'") {
+        chars.push("'");
+        i++;
+        while (i < text.length) {
+          if (text[i] === '\\' && i + 1 < text.length) {
+            chars.push(text[i], text[i + 1]);
+            i += 2;
+            continue;
+          }
+          if (text[i] === "'") {
+            chars.push("'");
+            i++;
+            break;
+          }
+          chars.push(text[i]);
+          i++;
+        }
+        continue;
+      }
+
+      // Check for regex literal: `/` preceded by `:`, `,`, `[`, or `(`
+      if (text[i] === '/') {
+        // Find last non-whitespace char in output
+        let lastNonWs = '';
+        for (let j = chars.length - 1; j >= 0; j--) {
+          if (!/\s/.test(chars[j])) {
+            lastNonWs = chars[j];
+            break;
+          }
+        }
+        if (lastNonWs === ':' || lastNonWs === ',' || lastNonWs === '[' || lastNonWs === '(') {
+          // Capture pattern until next unescaped `/`
+          i++;
+          let pattern = '';
+          let regexEscaped = false;
+          while (i < text.length) {
+            if (regexEscaped) {
+              pattern += text[i];
+              regexEscaped = false;
+              i++;
+              continue;
+            }
+            if (text[i] === '\\') {
+              pattern += text[i];
+              regexEscaped = true;
+              i++;
+              continue;
+            }
+            if (text[i] === '/') {
+              i++;
+              break;
+            }
+            pattern += text[i];
+            i++;
+          }
+          // Capture flags
+          let flags = '';
+          while (i < text.length && /[gimsuvy]/.test(text[i])) {
+            flags += text[i];
+            i++;
+          }
+          chars.push(
+            `{"$regex": ${JSON.stringify(pattern)}, "$options": ${JSON.stringify(flags)}}`
+          );
+          continue;
+        }
+      }
+
+      chars.push(text[i]);
+      i++;
+    }
+
+    return chars.join('');
   }
 
   /**

@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../shared/ipc-channels';
 import { connectionManager } from '../services/connection-manager';
+import { assertDbName, assertCollectionName } from '../lib/validators';
 import type { DatabaseInfo, CollectionInfo, CollectionStats } from '../../shared/types';
 
 export function registerDatabaseHandlers(): void {
@@ -17,6 +18,7 @@ export function registerDatabaseHandlers(): void {
   ipcMain.handle(
     IPC_CHANNELS.COLLECTION_LIST,
     async (_event, database: string): Promise<CollectionInfo[]> => {
+      assertDbName(database);
       const client = connectionManager.getClient();
       const collections = await client.db(database).listCollections().toArray();
       return collections.map((col) => ({
@@ -29,6 +31,8 @@ export function registerDatabaseHandlers(): void {
   ipcMain.handle(
     IPC_CHANNELS.COLLECTION_STATS,
     async (_event, database: string, collection: string): Promise<CollectionStats> => {
+      assertDbName(database);
+      assertCollectionName(collection);
       const client = connectionManager.getClient();
       const db = client.db(database);
       const stats = await db.command({ collStats: collection });

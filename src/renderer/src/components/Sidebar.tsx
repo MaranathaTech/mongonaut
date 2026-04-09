@@ -5,7 +5,7 @@ import ConnectionList from '../features/connection/ConnectionList';
 import ConnectionDialog from '../features/connection/ConnectionDialog';
 import DatabaseTree from '../features/browser/DatabaseTree';
 import HistoryPanel from '../features/history/HistoryPanel';
-import type { ConnectionConfig } from '../../../shared/types';
+import type { StoredConnectionConfig } from '../../../shared/types';
 
 const MIN_HISTORY_HEIGHT = 32;
 const MAX_HISTORY_PERCENT = 70;
@@ -23,7 +23,7 @@ export default function Sidebar({ connectionDialogTrigger }: SidebarProps): Reac
   const disconnect = useConnectionStore((s) => s.disconnect);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editConfig, setEditConfig] = useState<ConnectionConfig | null>(null);
+  const [editConfig, setEditConfig] = useState<StoredConnectionConfig | null>(null);
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [historyHeight, setHistoryHeight] = useState(200);
   const [isResizing, setIsResizing] = useState(false);
@@ -59,7 +59,7 @@ export default function Sidebar({ connectionDialogTrigger }: SidebarProps): Reac
     setDialogOpen(true);
   };
 
-  const handleEditConnection = (config: ConnectionConfig): void => {
+  const handleEditConnection = (config: StoredConnectionConfig): void => {
     setEditConfig(config);
     setDialogOpen(true);
   };

@@ -146,7 +146,11 @@ function ActionsRenderer(params: ICellRendererParams): React.JSX.Element {
                 database,
                 collection,
                 serializedId
-              )) as { success: boolean; error?: string };
+              )) as { success: boolean; cancelled?: boolean; error?: string };
+              if (result.cancelled) {
+                useDocumentStore.getState().setConfirmDialog(null);
+                return result;
+              }
               if (result.success) {
                 useDocumentStore.getState().setConfirmDialog(null);
                 useDocumentStore.getState().closeEditor();
