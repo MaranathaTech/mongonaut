@@ -113,25 +113,47 @@ export default function EditorPanel(): React.JSX.Element {
   );
 }
 
+/** Try to prettify the JSON-like body of a method call */
+function tryFormatMethodBody(prefix: string, body: string, suffix: string): string | null {
+  try {
+    const normalized = body
+      .replace(/'/g, '"')
+      .replace(/(\w+)\s*:/g, '"$1":')
+      .replace(/,\s*([}\]])/g, '$1');
+
+    const parsed = JSON.parse(normalized);
+    const formatted = JSON.stringify(parsed, null, 2);
+    return `${prefix}\n${formatted}\n${suffix.trim()}`;
+  } catch {
+    return null;
+  }
+}
+
 /** Attempt to format a MongoDB query string by prettifying JSON-like content */
 function tryFormatQuery(text: string): string {
-  // Match the method call pattern: db.collection.method(...)
+  // db.getCollection("name").method(...)
+  const getCollMatch = text.match(
+    /^(db\.getCollection\s*\(\s*["'][^"']+["']\s*\)\.\w+\s*\()(.+)(\)\s*)$/s
+  );
+  if (getCollMatch) {
+    const result = tryFormatMethodBody(getCollMatch[1], getCollMatch[2], getCollMatch[3]);
+    if (result) return result;
+  }
+
+  // db["name"].method(...)
+  const bracketMatch = text.match(
+    /^(db\s*\[\s*["'][^"']+["']\s*\]\.\w+\s*\()(.+)(\)\s*)$/s
+  );
+  if (bracketMatch) {
+    const result = tryFormatMethodBody(bracketMatch[1], bracketMatch[2], bracketMatch[3]);
+    if (result) return result;
+  }
+
+  // db.collection.method(...)
   const methodMatch = text.match(/^(db\.\w+\.\w+\s*\()(.+)(\)\s*)$/s);
   if (methodMatch) {
-    const [, prefix, body, suffix] = methodMatch;
-    try {
-      // Try parsing the body as JSON (with relaxed handling)
-      const normalized = body
-        .replace(/'/g, '"')
-        .replace(/(\w+)\s*:/g, '"$1":')
-        .replace(/,\s*([}\]])/g, '$1');
-
-      const parsed = JSON.parse(normalized);
-      const formatted = JSON.stringify(parsed, null, 2);
-      return `${prefix}\n${formatted}\n${suffix.trim()}`;
-    } catch {
-      // Fall through
-    }
+    const result = tryFormatMethodBody(methodMatch[1], methodMatch[2], methodMatch[3]);
+    if (result) return result;
   }
 
   return text;

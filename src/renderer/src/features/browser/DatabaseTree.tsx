@@ -5,6 +5,7 @@ import { useBrowserStore } from '../../stores/browser-store';
 import { useEditorStore } from '../../stores/editor-store';
 import { DatabaseContextMenu, CollectionContextMenu } from './BrowserContextMenu';
 import CollectionStatsDialog from './CollectionStatsDialog';
+import IndexManagementDialog from '../index-management/IndexManagementDialog';
 
 interface TreeNode {
   id: string;
@@ -24,6 +25,12 @@ export default function DatabaseTree(): React.JSX.Element {
   const addTab = useEditorStore((s) => s.addTab);
 
   const [statsDialog, setStatsDialog] = useState<{
+    open: boolean;
+    database: string;
+    collection: string;
+  }>({ open: false, database: '', collection: '' });
+
+  const [indexDialog, setIndexDialog] = useState<{
     open: boolean;
     database: string;
     collection: string;
@@ -80,12 +87,15 @@ export default function DatabaseTree(): React.JSX.Element {
 
   const openQueryTab = useCallback(
     (database: string, collection: string) => {
+      const queryText = /^\w+$/.test(collection)
+        ? `db.${collection}.find({})`
+        : `db.getCollection("${collection}").find({})`;
       addTab({
         id: `tab-${Date.now()}`,
         title: collection,
         database,
         collection,
-        queryText: `db.${collection}.find({})`,
+        queryText,
         isDirty: false
       });
     },
@@ -94,6 +104,10 @@ export default function DatabaseTree(): React.JSX.Element {
 
   const openStats = useCallback((database: string, collection: string) => {
     setStatsDialog({ open: true, database, collection });
+  }, []);
+
+  const openIndexes = useCallback((database: string, collection: string) => {
+    setIndexDialog({ open: true, database, collection });
   }, []);
 
   const refreshDatabase = useCallback(
@@ -150,6 +164,7 @@ export default function DatabaseTree(): React.JSX.Element {
               {...props}
               onOpenQueryTab={openQueryTab}
               onViewStats={openStats}
+              onManageIndexes={openIndexes}
               onRefreshDatabase={refreshDatabase}
             />
           )}
@@ -162,6 +177,13 @@ export default function DatabaseTree(): React.JSX.Element {
         database={statsDialog.database}
         collection={statsDialog.collection}
       />
+
+      <IndexManagementDialog
+        open={indexDialog.open}
+        onOpenChange={(open) => setIndexDialog((s) => ({ ...s, open }))}
+        database={indexDialog.database}
+        collection={indexDialog.collection}
+      />
     </div>
   );
 }
@@ -169,6 +191,7 @@ export default function DatabaseTree(): React.JSX.Element {
 interface TreeNodeRendererExtraProps {
   onOpenQueryTab: (database: string, collection: string) => void;
   onViewStats: (database: string, collection: string) => void;
+  onManageIndexes: (database: string, collection: string) => void;
   onRefreshDatabase: (database: string) => void;
 }
 
@@ -177,6 +200,7 @@ function TreeNodeRenderer({
   style,
   onOpenQueryTab,
   onViewStats,
+  onManageIndexes,
   onRefreshDatabase
 }: NodeRendererProps<TreeNode> & TreeNodeRendererExtraProps): React.JSX.Element {
   const data = node.data;
@@ -246,6 +270,7 @@ function TreeNodeRenderer({
     <CollectionContextMenu
       onOpenQueryTab={() => onOpenQueryTab(dbName, data.name)}
       onViewStats={() => onViewStats(dbName, data.name)}
+      onManageIndexes={() => onManageIndexes(dbName, data.name)}
       onRefresh={() => onRefreshDatabase(dbName)}
     >
       {content}

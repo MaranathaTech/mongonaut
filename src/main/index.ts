@@ -8,6 +8,7 @@ import { registerSchemaHandlers } from './ipc/schema.ipc';
 import { registerQueryHandlers } from './ipc/query.ipc';
 import { registerDocumentHandlers } from './ipc/document.ipc';
 import { registerHistoryHandlers } from './ipc/history.ipc';
+import { registerIndexHandlers } from './ipc/index.ipc';
 
 interface WindowBounds {
   x?: number;
@@ -106,6 +107,7 @@ app.whenReady().then(() => {
   registerQueryHandlers();
   registerDocumentHandlers();
   registerHistoryHandlers();
+  registerIndexHandlers();
 
   createWindow();
 

@@ -185,6 +185,64 @@ describe('QueryExecutor - parser correctness', () => {
   });
 });
 
+describe('QueryExecutor - getCollection and bracket notation', () => {
+  it('should parse db.getCollection("my-collection").find({})', () => {
+    const result = parseQuery('db.getCollection("my-collection").find({})');
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({});
+  });
+
+  it('should parse db.getCollection with single quotes', () => {
+    const result = parseQuery("db.getCollection('my.collection').find({status: 'active'})");
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({ status: 'active' });
+  });
+
+  it('should parse bracket notation db["name"].find({})', () => {
+    const result = parseQuery('db["my-collection"].find({})');
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({});
+  });
+
+  it('should parse bracket notation with single quotes', () => {
+    const result = parseQuery("db['my.collection'].find({name: 'test'})");
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({ name: 'test' });
+  });
+
+  it('should parse getCollection with chaining', () => {
+    const result = parseQuery(
+      'db.getCollection("my-collection").find({a: 1}).sort({b: -1}).limit(10)'
+    );
+    expect(result.method).toBe('find');
+    expect(result.filter).toEqual({ a: 1 });
+    expect(result.sort).toEqual({ b: -1 });
+    expect(result.limit).toBe(10);
+  });
+
+  it('should parse getCollection with aggregate', () => {
+    const result = parseQuery(
+      'db.getCollection("events-log").aggregate([{$match: {type: "click"}}])'
+    );
+    expect(result.method).toBe('aggregate');
+    expect(result.pipeline).toEqual([{ $match: { type: 'click' } }]);
+  });
+
+  it('should parse bracket notation with aggregate', () => {
+    const result = parseQuery(
+      'db["events.log"].aggregate([{$group: {_id: "$type", count: {$sum: 1}}}])'
+    );
+    expect(result.method).toBe('aggregate');
+    expect(result.pipeline).toEqual([{ $group: { _id: '$type', count: { $sum: 1 } } }]);
+  });
+
+  it('should parse getCollection with countDocuments', () => {
+    const result = parseQuery('db.getCollection("my-coll").countDocuments({active: true})');
+    expect(result.method).toBe('countDocuments');
+    expect(result.filter).toEqual({ active: true });
+  });
+});
+
 describe('sanitizeFilter', () => {
   it('should reject $where operator', () => {
     expect(() => sanitizeFilter({ $where: 'this.a == 1' })).toThrow(

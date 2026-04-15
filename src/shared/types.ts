@@ -86,3 +86,25 @@ export interface TabInfo {
   queryText: string;
   isDirty: boolean;
 }
+
+export interface IndexInfo {
+  name: string;
+  key: Record<string, number | string>;
+  unique: boolean;
+  sparse: boolean;
+  expireAfterSeconds?: number;
+  size: number;
+  isDefault: boolean;
+}
+
+export interface CreateIndexRequest {
+  database: string;
+  collection: string;
+  keys: Record<string, 1 | -1>;
+  options?: {
+    name?: string;
+    unique?: boolean;
+    sparse?: boolean;
+    expireAfterSeconds?: number;
+  };
+}

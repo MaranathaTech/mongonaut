@@ -157,6 +157,30 @@ class QueryExecutor {
   private parseQuery(queryText: string): ParsedQuery {
     const text = queryText.trim();
 
+    // Try db.getCollection("name").method(...) pattern
+    const getCollMatch = text.match(/^db\.getCollection\s*\(\s*["']([^"']+)["']\s*\)\.(\w+)\s*\(/);
+    if (getCollMatch) {
+      const method = getCollMatch[2];
+      const afterPrefix = text.slice(getCollMatch[0].length - 1);
+      const openIdx = 0;
+      const closeIdx = findMatchingParen(afterPrefix, openIdx);
+      const argsStr = afterPrefix.slice(openIdx + 1, closeIdx).trim();
+      const chainStr = afterPrefix.slice(closeIdx + 1).trim();
+      return this.parseMethodCall(method, argsStr, chainStr);
+    }
+
+    // Try db["name"].method(...) bracket notation pattern
+    const bracketMatch = text.match(/^db\s*\[\s*["']([^"']+)["']\s*\]\.(\w+)\s*\(/);
+    if (bracketMatch) {
+      const method = bracketMatch[2];
+      const afterPrefix = text.slice(bracketMatch[0].length - 1);
+      const openIdx = 0;
+      const closeIdx = findMatchingParen(afterPrefix, openIdx);
+      const argsStr = afterPrefix.slice(openIdx + 1, closeIdx).trim();
+      const chainStr = afterPrefix.slice(closeIdx + 1).trim();
+      return this.parseMethodCall(method, argsStr, chainStr);
+    }
+
     // Try db.collection.method(...) pattern using depth-aware paren walker
     const prefixMatch = text.match(/^db\.\w+\.(\w+)\s*\(/);
     if (prefixMatch) {

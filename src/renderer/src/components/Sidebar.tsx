@@ -176,6 +176,7 @@ export default function Sidebar({ connectionDialogTrigger }: SidebarProps): Reac
       </div>
 
       <ConnectionDialog
+        key={editConfig?.id ?? 'new'}
         open={dialogOpen}
         onOpenChange={handleDialogOpenChange}
         editConfig={editConfig}

@@ -33,6 +33,16 @@ function getContext(
   const lineContent = model.getLineContent(position.lineNumber);
   const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
+  // After db.getCollection("name"). → suggest methods
+  if (/db\.getCollection\s*\(\s*["'][^"']+["']\s*\)\.\s*$/.test(textBeforeCursor)) {
+    return 'collection-method';
+  }
+
+  // After db["name"]. → suggest methods
+  if (/db\s*\[\s*["'][^"']+["']\s*\]\.\s*$/.test(textBeforeCursor)) {
+    return 'collection-method';
+  }
+
   // After db.collectionName. → suggest methods
   if (/db\.\w+\.\s*$/.test(textBeforeCursor)) {
     return 'collection-method';

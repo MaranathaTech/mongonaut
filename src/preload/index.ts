@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../shared/ipc-channels';
-import type { FullConnectionConfig, QueryRequest } from '../shared/types';
+import type { FullConnectionConfig, QueryRequest, CreateIndexRequest } from '../shared/types';
 
 const api = {
   // Connection
@@ -35,6 +35,14 @@ const api = {
   // Schema
   sampleSchema: (database: string, collection: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.SCHEMA_SAMPLE, database, collection),
+
+  // Index
+  listIndexes: (database: string, collection: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.INDEX_LIST, database, collection),
+  createIndex: (request: CreateIndexRequest) =>
+    ipcRenderer.invoke(IPC_CHANNELS.INDEX_CREATE, request),
+  dropIndex: (database: string, collection: string, indexName: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.INDEX_DROP, database, collection, indexName),
 
   // History
   listHistory: () => ipcRenderer.invoke(IPC_CHANNELS.HISTORY_LIST),

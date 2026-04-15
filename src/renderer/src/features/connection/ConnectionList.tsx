@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Plus, Trash2, Plug, Server } from 'lucide-react';
+import { Plus, Trash2, Pencil, Server, Plug } from 'lucide-react';
+import * as ContextMenu from '@radix-ui/react-context-menu';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import type { StoredConnectionConfig } from '../../../../shared/types';
 import { useConnectionStore } from '../../stores/connection-store';
 
@@ -19,6 +21,7 @@ export default function ConnectionList({
   const connect = useConnectionStore((s) => s.connect);
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const handleConnect = async (config: StoredConnectionConfig): Promise<void> => {
     setConnectingId(config.id);
@@ -37,12 +40,21 @@ export default function ConnectionList({
     }
   };
 
+  const handleConfirmDelete = (): void => {
+    if (pendingDeleteId) {
+      onDeleteConnection(pendingDeleteId);
+      setPendingDeleteId(null);
+    }
+  };
+
   const displayHost = (config: StoredConnectionConfig): string => {
     if (config.mode === 'uri') {
       return config.host || 'URI connection';
     }
     return `${config.host || 'localhost'}:${config.port || 27017}`;
   };
+
+  const pendingDeleteConfig = connections.find((c) => c.id === pendingDeleteId);
 
   return (
     <div className="flex h-full flex-col">
@@ -62,48 +74,75 @@ export default function ConnectionList({
         ) : (
           <div className="space-y-1">
             {connections.map((config) => (
-              <div
-                key={config.id}
-                className="group flex items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800"
-              >
-                <button
-                  className="flex flex-1 items-center gap-2 text-left"
-                  onClick={() => handleConnect(config)}
-                  disabled={connectingId === config.id}
-                >
-                  <Server className="h-3.5 w-3.5 flex-shrink-0 text-gray-400 dark:text-zinc-500" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm text-gray-800 dark:text-zinc-200">
-                      {config.name}
-                    </p>
-                    <p className="truncate text-xs text-gray-400 dark:text-zinc-500">
-                      {displayHost(config)}
-                    </p>
+              <ContextMenu.Root key={config.id}>
+                <ContextMenu.Trigger asChild>
+                  <div className="group flex items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800">
+                    <button
+                      className="flex flex-1 items-center gap-2 text-left"
+                      onClick={() => handleConnect(config)}
+                      disabled={connectingId === config.id}
+                    >
+                      <Server className="h-3.5 w-3.5 flex-shrink-0 text-gray-400 dark:text-zinc-500" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm text-gray-800 dark:text-zinc-200">
+                          {config.name}
+                        </p>
+                        <p className="truncate text-xs text-gray-400 dark:text-zinc-500">
+                          {displayHost(config)}
+                        </p>
+                      </div>
+                    </button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditConnection(config);
+                        }}
+                        className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                        title="Edit"
+                      >
+                        <Pencil className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPendingDeleteId(config.id);
+                        }}
+                        className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-red-500 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-red-400"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
-                </button>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditConnection(config);
-                    }}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
-                    title="Edit"
-                  >
-                    <Plug className="h-3 w-3" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteConnection(config.id);
-                    }}
-                    className="rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-red-500 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-red-400"
-                    title="Delete"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
+                </ContextMenu.Trigger>
+                <ContextMenu.Portal>
+                  <ContextMenu.Content className="min-w-[160px] rounded-md border border-gray-200 bg-gray-100 p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                    <ContextMenu.Item
+                      className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-xs text-gray-700 outline-none hover:bg-gray-200 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                      onSelect={() => handleConnect(config)}
+                    >
+                      <Plug className="h-3.5 w-3.5" />
+                      Connect
+                    </ContextMenu.Item>
+                    <ContextMenu.Item
+                      className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-xs text-gray-700 outline-none hover:bg-gray-200 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                      onSelect={() => onEditConnection(config)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit Connection
+                    </ContextMenu.Item>
+                    <ContextMenu.Separator className="my-1 h-px bg-gray-200 dark:bg-zinc-700" />
+                    <ContextMenu.Item
+                      className="flex cursor-default items-center gap-2 rounded px-2 py-1.5 text-xs text-red-600 outline-none hover:bg-gray-200 dark:text-red-400 dark:hover:bg-zinc-700"
+                      onSelect={() => setPendingDeleteId(config.id)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete Connection
+                    </ContextMenu.Item>
+                  </ContextMenu.Content>
+                </ContextMenu.Portal>
+              </ContextMenu.Root>
             ))}
           </div>
         )}
@@ -124,6 +163,45 @@ export default function ConnectionList({
           New Connection
         </button>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog.Root
+        open={pendingDeleteId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDeleteId(null);
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/60" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-gray-200 bg-white p-6 shadow-xl dark:border-zinc-700 dark:bg-zinc-900">
+            <AlertDialog.Title className="text-lg font-semibold text-gray-900 dark:text-zinc-100">
+              Delete Connection
+            </AlertDialog.Title>
+            <AlertDialog.Description className="mt-2 text-sm text-gray-500 dark:text-zinc-400">
+              Are you sure you want to delete{' '}
+              <span className="font-medium text-gray-700 dark:text-zinc-200">
+                {pendingDeleteConfig?.name || 'this connection'}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialog.Description>
+            <div className="mt-6 flex justify-end gap-3">
+              <AlertDialog.Cancel asChild>
+                <button className="rounded px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-zinc-300 dark:hover:bg-zinc-800">
+                  Cancel
+                </button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <button
+                  className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
+                  onClick={handleConfirmDelete}
+                >
+                  Delete
+                </button>
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
     </div>
   );
 }

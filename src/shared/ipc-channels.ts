@@ -25,6 +25,11 @@ export const IPC_CHANNELS = {
   // Schema
   SCHEMA_SAMPLE: 'schema:sample',
 
+  // Index
+  INDEX_LIST: 'index:list',
+  INDEX_CREATE: 'index:create',
+  INDEX_DROP: 'index:drop',
+
   // History
   HISTORY_LIST: 'history:list',
   HISTORY_CLEAR: 'history:clear',
