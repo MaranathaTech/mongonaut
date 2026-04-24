@@ -22,9 +22,9 @@ async function confirmDestructive(
   message: string,
   detail?: string
 ): Promise<boolean> {
-  const parent = BrowserWindow.getFocusedWindow() ?? undefined;
-  const result = await dialog.showMessageBox(parent!, {
-    type: 'warning',
+  const parent = BrowserWindow.getFocusedWindow();
+  const options = {
+    type: 'warning' as const,
     buttons: ['Cancel', 'Confirm'],
     defaultId: 0,
     cancelId: 0,
@@ -32,7 +32,10 @@ async function confirmDestructive(
     message,
     detail,
     noLink: true
-  });
+  };
+  const result = parent
+    ? await dialog.showMessageBox(parent, options)
+    : await dialog.showMessageBox(options);
   return result.response === 1;
 }
 

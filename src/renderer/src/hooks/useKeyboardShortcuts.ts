@@ -66,8 +66,10 @@ export function useKeyboardShortcuts(actions: ShortcutActions): void {
         const { tabs, activeTabId, setActiveTab } = useEditorStore.getState();
         if (tabs.length > 1 && activeTabId) {
           const idx = tabs.findIndex((t) => t.id === activeTabId);
-          const nextIdx = (idx + 1) % tabs.length;
-          setActiveTab(tabs[nextIdx].id);
+          if (idx !== -1) {
+            const nextIdx = (idx + 1) % tabs.length;
+            setActiveTab(tabs[nextIdx].id);
+          }
         }
         return;
       }
@@ -78,8 +80,10 @@ export function useKeyboardShortcuts(actions: ShortcutActions): void {
         const { tabs, activeTabId, setActiveTab } = useEditorStore.getState();
         if (tabs.length > 1 && activeTabId) {
           const idx = tabs.findIndex((t) => t.id === activeTabId);
-          const prevIdx = (idx - 1 + tabs.length) % tabs.length;
-          setActiveTab(tabs[prevIdx].id);
+          if (idx !== -1) {
+            const prevIdx = (idx - 1 + tabs.length) % tabs.length;
+            setActiveTab(tabs[prevIdx].id);
+          }
         }
         return;
       }

@@ -31,7 +31,7 @@ vi.mock('crypto', () => ({
   randomUUID: () => `uuid-${Math.random().toString(36).slice(2, 11)}`
 }));
 
-const { addHistoryEntry, registerHistoryHandlers } = await import('../src/main/ipc/history.ipc');
+const { addHistoryEntry } = await import('../src/main/ipc/history.ipc');
 
 describe('Query History', () => {
   beforeEach(() => {

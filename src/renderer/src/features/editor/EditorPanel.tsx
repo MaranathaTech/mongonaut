@@ -28,6 +28,7 @@ export default function EditorPanel(): React.JSX.Element {
     if (activeTab) {
       loadSchema(activeTab.database, activeTab.collection);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally keyed on database/collection only, not activeTab reference
   }, [activeTab?.database, activeTab?.collection, loadSchema]);
 
   const handleRefreshSchema = useCallback(() => {
